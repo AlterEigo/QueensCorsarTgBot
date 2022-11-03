@@ -1,0 +1,7 @@
+*
+!*/
+!*.rs
+!*.toml
+!.gitignore
+
+target/
