@@ -2,11 +2,13 @@ mod logger;
 mod core;
 mod prelude;
 
+use tokio::main;
 use crate::prelude::*;
 
 const CRATE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
-fn main() -> UResult {
+#[tokio::main]
+async fn main() -> UResult {
     let logger = configure_term_root();
 
     info!(logger, "Starting QueenCorsar telegram bot";
