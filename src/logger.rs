@@ -42,3 +42,15 @@ pub fn configure_full_root() -> UResult<Logger> {
 
     Ok(slog::Logger::root(drain, o!()))
 }
+
+/// Инициализатор логгера с полным отображением
+pub fn configure_term_root() -> UResult<Logger> {
+    let decorator = slog_term::TermDecorator::new().build();
+    let drain = slog_term::CompactFormat::new(decorator)
+        .use_local_timestamp()
+        .build()
+        .fuse();
+    let drain = slog_async::Async::new(drain).build().fuse();
+
+    Ok(slog::Logger::root(drain, o!()))
+}
