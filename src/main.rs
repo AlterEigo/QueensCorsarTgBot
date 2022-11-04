@@ -5,6 +5,8 @@ mod prelude;
 use tokio::main;
 use crate::prelude::*;
 
+use telegram_bot_api::{bot,methods,types};
+
 const CRATE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 #[tokio::main]
@@ -25,6 +27,12 @@ async fn main() -> UResult {
     }
     let token = token.unwrap();
     debug!(logger, "API token fetched");
+
+    let bot = bot::BotApi::new(token, None).await;
+    if bot.is_err() {
+        crit!(logger, "Could not instantiate the bot with the provided token");
+        return Err("BotApi instantiation error".into());
+    }
 
     Ok(())
 }
