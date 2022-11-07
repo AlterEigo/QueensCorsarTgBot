@@ -38,10 +38,12 @@ async fn main() -> UResult {
     }
 
     // Temporary
+    let tls_config = create_server_config()?;
     let server = TcpListener::bind("127.0.0.1:8080")?;
     let server = UpdateProvider::new()
         .logger(logger.clone())
         .listener(server)
+        .tls_config(tls_config)
         .build();
 
     if let Err(err) = server.listen().await {
