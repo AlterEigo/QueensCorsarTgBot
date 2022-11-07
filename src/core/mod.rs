@@ -1,4 +1,4 @@
-use std::{sync::atomic::{AtomicBool, Ordering}, net::{TcpListener, TcpStream}, io::Read};
+use std::{sync::atomic::{AtomicBool, Ordering}, net::{TcpListener, TcpStream}, io::{Read, BufReader, BufRead}};
 use std::io;
 use std::io::Write;
 
@@ -33,9 +33,9 @@ impl UpdateProvider {
     }
 
     fn read_http_request(&self, stream: &mut TcpStream) -> UResult<http::Request<String>> {
-        let mut buffer = Vec::new();
         let mut headers = [httparse::EMPTY_HEADER; 16];
-        stream.read_to_end(&mut buffer)?;
+        let mut reader = BufReader::new(stream);
+        let buffer = reader.fill_buf()?.to_vec();
         let mut request_infos = httparse::Request::new(&mut headers);
         let parse_result = request_infos.parse(&buffer)?;
         if parse_result.is_partial() {
