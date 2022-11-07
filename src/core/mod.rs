@@ -1,8 +1,10 @@
 use std::{sync::atomic::{AtomicBool, Ordering}, net::{TcpListener, TcpStream}, io::{Read, BufReader, BufRead}};
 use std::io;
 use std::io::Write;
+use std::sync::Arc;
 
 use http::Version;
+use rustls::{ServerConnection, ServerConfig};
 use slog::Logger;
 
 use crate::prelude::*;
@@ -25,7 +27,8 @@ fn parse_http_version(v: u8) -> UResult<http::Version> {
 pub struct UpdateProvider {
     tcp_handle: TcpListener,
     stop_requested: AtomicBool,
-    logger: Logger
+    logger: Logger,
+    tls_config: Arc<ServerConfig>
 }
 
 impl UpdateProvider {
@@ -84,6 +87,7 @@ impl UpdateProvider {
             .header("Content-Type", "application/json")
             .body(r#"{"result":"ok"}"#)
             .unwrap();
+        // let conn = ServerConnection::new(self.tls_config.clone())?;
         let request = self.read_http_request(&mut stream)?;
         debug!(self.logger, "Received http data"; "data" => format!("{:#?}", request));
         self.write_http_response(&mut stream, response)?;
@@ -128,7 +132,8 @@ impl UpdateProvider {
 #[derive(Default,Debug)]
 pub struct UpdateProviderBuilder {
     tcp_listener: Option<TcpListener>,
-    logger: Option<Logger>
+    logger: Option<Logger>,
+    tls_config: Option<ServerConfig>
 }
 
 impl UpdateProviderBuilder {
@@ -146,11 +151,19 @@ impl UpdateProviderBuilder {
         }
     }
 
+    pub fn tls_config(self, config: ServerConfig) -> Self {
+        Self {
+            tls_config: Some(config),
+            ..self
+        }
+    }
+
     pub fn build(self) -> UpdateProvider {
         UpdateProvider {
             tcp_handle: self.tcp_listener.unwrap(),
             stop_requested: false.into(),
-            logger: self.logger.unwrap()
+            logger: self.logger.unwrap(),
+            tls_config: Arc::new(self.tls_config.unwrap())
         }
     }
 }

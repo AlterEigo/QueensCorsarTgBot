@@ -1,6 +1,9 @@
 mod logger;
 mod core;
 mod prelude;
+mod utility;
+
+use std::net::TcpListener;
 
 use tokio::main;
 use crate::prelude::*;
@@ -32,6 +35,17 @@ async fn main() -> UResult {
     if bot.is_err() {
         crit!(logger, "Could not instantiate the bot with the provided token");
         return Err("BotApi instantiation error".into());
+    }
+
+    // Temporary
+    let server = TcpListener::bind("127.0.0.1:8080")?;
+    let server = UpdateProvider::new()
+        .logger(logger.clone())
+        .listener(server)
+        .build();
+
+    if let Err(err) = server.listen().await {
+        crit!(logger, "Critical error while running the server"; "reason" => err.to_string());
     }
 
     Ok(())
