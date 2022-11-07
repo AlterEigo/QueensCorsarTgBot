@@ -2,6 +2,7 @@ use std::{sync::atomic::{AtomicBool, Ordering}, net::{TcpListener, TcpStream}, i
 use std::io;
 use std::io::Write;
 
+use http::Version;
 use slog::Logger;
 
 use crate::prelude::*;
@@ -58,6 +59,25 @@ impl UpdateProvider {
         Ok(request)
     }
 
+    fn write_http_response(&self, stream: &mut TcpStream, response: http::Response<&str>) -> UResult {
+        let (parts, body) = response.into_parts();
+        let version = match parts.version {
+            Version::HTTP_09 => "HTTP/0.9",
+            Version::HTTP_10 => "HTTP/1.0",
+            Version::HTTP_11 => "HTTP/1.1",
+            Version::HTTP_2 => "HTTP/2.0",
+            Version::HTTP_3 => "HTTP/3.0",
+            _ => return Err("Impossible version enum error".into())
+        };
+        write!(stream, "{} {} {}\r\n", version, parts.status.as_str(), parts.status.canonical_reason().unwrap())?;
+        for (key, value) in parts.headers {
+            let key = key.unwrap();
+            write!(stream, "{}: {}\r\n", key, String::from_utf8(value.as_bytes().to_vec())?)?;
+        }
+        write!(stream, "\r\n{}", body)?;
+        Ok(())
+    }
+
     fn handle_stream(&self, mut stream: TcpStream) -> UResult {
         let response = http::Response::builder()
             .status(200)
@@ -66,7 +86,7 @@ impl UpdateProvider {
             .unwrap();
         let request = self.read_http_request(&mut stream)?;
         debug!(self.logger, "Received http data"; "data" => format!("{:#?}", request));
-        write!(stream, "{}", response.body())?;
+        self.write_http_response(&mut stream, response)?;
         debug!(self.logger, "Successfully responded");
         Ok(())
     }
