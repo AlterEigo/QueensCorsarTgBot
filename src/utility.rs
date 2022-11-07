@@ -2,7 +2,7 @@ use std::io::BufReader;
 use std::iter;
 
 use rustls::{Certificate, PrivateKey, ServerConfig};
-use rustls_pemfile::{Item, read_one};
+use rustls_pemfile::{read_one, Item};
 
 use crate::prelude::UResult;
 
@@ -16,14 +16,14 @@ pub fn load_x509_credentials() -> UResult<(Vec<Certificate>, PrivateKey)> {
     for item in iter::from_fn(|| read_one(&mut cert_reader).transpose()) {
         match item.unwrap() {
             Item::X509Certificate(cert) => certs.push(Certificate(cert)),
-            _ => return Err("Expected X509 certificates, found something else".into())
+            _ => return Err("Expected X509 certificates, found something else".into()),
         }
     }
     let key = {
         let item = read_one(&mut key_reader)?.unwrap();
         match item {
             Item::RSAKey(key) => PrivateKey(key),
-            _ => return Err("Expected an RSA private key, found something else".into())
+            _ => return Err("Expected an RSA private key, found something else".into()),
         }
     };
     Ok((certs, key))

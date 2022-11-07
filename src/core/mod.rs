@@ -1,17 +1,19 @@
-use std::{sync::atomic::{AtomicBool, Ordering}, net::{TcpListener, TcpStream}, io::{Read, BufReader, BufRead, BufWriter}};
 use std::io;
 use std::io::Write;
 use std::sync::Arc;
+use std::{
+    io::{BufRead, BufReader, BufWriter, Read},
+    net::{TcpListener, TcpStream},
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 use http::Version;
-use rustls::{ServerConnection, ServerConfig};
+use rustls::{ServerConfig, ServerConnection};
 use slog::Logger;
 
 use crate::prelude::*;
 
-pub trait UpdateHandler {
-
-}
+pub trait UpdateHandler {}
 
 fn parse_http_version(v: u8) -> UResult<http::Version> {
     match v {
@@ -19,7 +21,7 @@ fn parse_http_version(v: u8) -> UResult<http::Version> {
         1 => Ok(http::Version::HTTP_10),
         2 => Ok(http::Version::HTTP_2),
         3 => Ok(http::Version::HTTP_3),
-        _ => Err("Wrong HTTP version".into())
+        _ => Err("Wrong HTTP version".into()),
     }
 }
 
@@ -28,7 +30,7 @@ pub struct UpdateProvider {
     tcp_handle: TcpListener,
     stop_requested: AtomicBool,
     logger: Logger,
-    tls_config: Arc<ServerConfig>
+    tls_config: Arc<ServerConfig>,
 }
 
 impl UpdateProvider {
@@ -37,7 +39,8 @@ impl UpdateProvider {
     }
 
     fn read_http_request<T>(&self, stream: &mut T) -> UResult<http::Request<String>>
-        where T: std::io::Read
+    where
+        T: std::io::Read,
     {
         let mut headers = [httparse::EMPTY_HEADER; 16];
         let mut reader = BufReader::new(stream);
@@ -57,15 +60,14 @@ impl UpdateProvider {
                 request = request.header(header.name, header.value);
             }
         }
-        let buffer: Vec<u8> = buffer.into_iter()
-            .skip(parse_result)
-            .collect();
+        let buffer: Vec<u8> = buffer.into_iter().skip(parse_result).collect();
         let request = request.body(String::from_utf8(buffer)?)?;
         Ok(request)
     }
 
     fn write_http_response<T>(&self, stream: &mut T, response: http::Response<&str>) -> UResult
-        where T: std::io::Write
+    where
+        T: std::io::Write,
     {
         let (parts, body) = response.into_parts();
         let version = match parts.version {
@@ -74,14 +76,25 @@ impl UpdateProvider {
             Version::HTTP_11 => "HTTP/1.1",
             Version::HTTP_2 => "HTTP/2.0",
             Version::HTTP_3 => "HTTP/3.0",
-            _ => return Err("Impossible version enum error".into())
+            _ => return Err("Impossible version enum error".into()),
         };
         let buffer = Vec::new();
         let mut bufwriter = BufWriter::new(buffer);
-        write!(bufwriter, "{} {} {}\r\n", version, parts.status.as_str(), parts.status.canonical_reason().unwrap())?;
+        write!(
+            bufwriter,
+            "{} {} {}\r\n",
+            version,
+            parts.status.as_str(),
+            parts.status.canonical_reason().unwrap()
+        )?;
         for (key, value) in parts.headers {
             let key = key.unwrap();
-            write!(bufwriter, "{}: {}\r\n", key, String::from_utf8(value.as_bytes().to_vec())?)?;
+            write!(
+                bufwriter,
+                "{}: {}\r\n",
+                key,
+                String::from_utf8(value.as_bytes().to_vec())?
+            )?;
         }
         write!(bufwriter, "\r\n{}", body)?;
         let data = String::from_utf8(bufwriter.buffer().to_vec())?;
@@ -139,11 +152,11 @@ impl UpdateProvider {
     }
 }
 
-#[derive(Default,Debug)]
+#[derive(Default, Debug)]
 pub struct UpdateProviderBuilder {
     tcp_listener: Option<TcpListener>,
     logger: Option<Logger>,
-    tls_config: Option<ServerConfig>
+    tls_config: Option<ServerConfig>,
 }
 
 impl UpdateProviderBuilder {
@@ -173,7 +186,7 @@ impl UpdateProviderBuilder {
             tcp_handle: self.tcp_listener.unwrap(),
             stop_requested: false.into(),
             logger: self.logger.unwrap(),
-            tls_config: Arc::new(self.tls_config.unwrap())
+            tls_config: Arc::new(self.tls_config.unwrap()),
         }
     }
 }

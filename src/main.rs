@@ -1,14 +1,14 @@
-mod logger;
 mod core;
+mod logger;
 mod prelude;
 mod utility;
 
 use std::net::TcpListener;
 
-use tokio::main;
 use crate::prelude::*;
+use tokio::main;
 
-use telegram_bot_api::{bot,methods,types};
+use telegram_bot_api::{bot, methods, types};
 
 const CRATE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -33,7 +33,10 @@ async fn main() -> UResult {
 
     let bot = bot::BotApi::new(token, None).await;
     if bot.is_err() {
-        crit!(logger, "Could not instantiate the bot with the provided token");
+        crit!(
+            logger,
+            "Could not instantiate the bot with the provided token"
+        );
         return Err("BotApi instantiation error".into());
     }
 
