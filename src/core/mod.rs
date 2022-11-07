@@ -1,4 +1,4 @@
-use std::{sync::atomic::{AtomicBool, Ordering}, net::{TcpListener, TcpStream}, io::{Read, BufReader, BufRead}};
+use std::{sync::atomic::{AtomicBool, Ordering}, net::{TcpListener, TcpStream}, io::{Read, BufReader, BufRead, BufWriter}};
 use std::io;
 use std::io::Write;
 use std::sync::Arc;
@@ -76,12 +76,17 @@ impl UpdateProvider {
             Version::HTTP_3 => "HTTP/3.0",
             _ => return Err("Impossible version enum error".into())
         };
-        write!(stream, "{} {} {}\r\n", version, parts.status.as_str(), parts.status.canonical_reason().unwrap())?;
+        let buffer = Vec::new();
+        let mut bufwriter = BufWriter::new(buffer);
+        write!(bufwriter, "{} {} {}\r\n", version, parts.status.as_str(), parts.status.canonical_reason().unwrap())?;
         for (key, value) in parts.headers {
             let key = key.unwrap();
-            write!(stream, "{}: {}\r\n", key, String::from_utf8(value.as_bytes().to_vec())?)?;
+            write!(bufwriter, "{}: {}\r\n", key, String::from_utf8(value.as_bytes().to_vec())?)?;
         }
-        write!(stream, "\r\n{}", body)?;
+        write!(bufwriter, "\r\n{}", body)?;
+        let data = String::from_utf8(bufwriter.buffer().to_vec())?;
+        debug!(self.logger, "{}", &data);
+        write!(stream, "{}", &data)?;
         Ok(())
     }
 
