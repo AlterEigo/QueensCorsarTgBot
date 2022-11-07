@@ -15,6 +15,7 @@ chrono = "0.4.22"
 telegram-bot-api = "0.1.2"
 http = "0.2.8"
 httparse = "1.8.0"
+rustls = "0.20.7"
 
 [dependencies.tokio]
 version = "1"
