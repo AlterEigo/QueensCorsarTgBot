@@ -47,7 +47,9 @@ impl UpdateProvider {
             .uri(request_infos.path.unwrap())
             .version(parse_http_version(request_infos.version.unwrap())?);
         for header in headers {
-            request = request.header(header.name, header.value);
+            if header != httparse::EMPTY_HEADER {
+                request = request.header(header.name, header.value);
+            }
         }
         let buffer: Vec<u8> = buffer.into_iter()
             .skip(parse_result)
