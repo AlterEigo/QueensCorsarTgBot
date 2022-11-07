@@ -14,6 +14,7 @@ slog-async = "2.7.0"
 chrono = "0.4.22"
 telegram-bot-api = "0.1.2"
 http = "0.2.8"
+httparse = "1.8.0"
 
 [dependencies.tokio]
 version = "1"
