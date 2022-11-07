@@ -82,7 +82,7 @@ impl UpdateProvider {
         let response = http::Response::builder()
             .status(200)
             .header("Content-Type", "application/json")
-            .body(r"{'result':'ok'}")
+            .body(r#"{"result":"ok"}"#)
             .unwrap();
         let request = self.read_http_request(&mut stream)?;
         debug!(self.logger, "Received http data"; "data" => format!("{:#?}", request));
