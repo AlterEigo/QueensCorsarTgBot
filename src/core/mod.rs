@@ -1,5 +1,6 @@
-use std::{sync::atomic::{AtomicBool, Ordering}, net::{TcpListener, TcpStream}};
+use std::{sync::atomic::{AtomicBool, Ordering}, net::{TcpListener, TcpStream}, io::Read};
 use std::io;
+use std::io::Write;
 
 use slog::Logger;
 
@@ -21,8 +22,16 @@ impl UpdateProvider {
         UpdateProviderBuilder::default()
     }
 
-    fn handle_stream(&self, stream: TcpStream) -> UResult {
-        todo!()
+    fn handle_stream(&self, mut stream: TcpStream) -> UResult {
+        let response = http::Response::builder()
+            .status(200)
+            .header("Content-Type", "application/json")
+            .body(r"{'result':'ok'}")
+            .unwrap();
+        let mut buffer = Vec::new();
+        stream.read_to_end(&mut buffer)?;
+        write!(stream, "{}", response.body())?;
+        Ok(())
     }
 
     pub async fn listen(&self) -> UResult {
@@ -60,5 +69,30 @@ impl UpdateProvider {
 
 #[derive(Default,Debug)]
 pub struct UpdateProviderBuilder {
+    tcp_listener: Option<TcpListener>,
+    logger: Option<Logger>
+}
 
+impl UpdateProviderBuilder {
+    pub fn listener(self, tcp_listener: TcpListener) -> Self {
+        Self {
+            tcp_listener: Some(tcp_listener),
+            ..self
+        }
+    }
+
+    pub fn logger(self, logger: Logger) -> Self {
+        Self {
+            logger: Some(logger),
+            ..self
+        }
+    }
+
+    pub fn build(self) -> UpdateProvider {
+        UpdateProvider {
+            tcp_handle: self.tcp_listener.unwrap(),
+            stop_requested: false.into(),
+            logger: self.logger.unwrap()
+        }
+    }
 }
