@@ -38,8 +38,17 @@ async fn main() -> UResult {
     }
 
     // Temporary
-    let tls_config = create_server_config()?;
+    let tls_config = create_server_config();
+    if let Err(why) = tls_config {
+        crit!(logger, "Could not instantiate a valid TLS config"; "reason" => why.to_string());
+        return Err(why.into());
+    }
+    let tls_config = tls_config.unwrap();
+    info!(logger, "TLS config successfully initialized");
+
     let server = TcpListener::bind("127.0.0.1:8080")?;
+    info!(logger, "Starting server at port 8080");
+
     let server = UpdateProvider::new()
         .logger(logger.clone())
         .listener(server)
