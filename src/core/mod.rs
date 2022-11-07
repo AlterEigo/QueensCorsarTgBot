@@ -36,7 +36,9 @@ impl UpdateProvider {
         UpdateProviderBuilder::default()
     }
 
-    fn read_http_request(&self, stream: &mut TcpStream) -> UResult<http::Request<String>> {
+    fn read_http_request<T>(&self, stream: &mut T) -> UResult<http::Request<String>>
+        where T: std::io::Read
+    {
         let mut headers = [httparse::EMPTY_HEADER; 16];
         let mut reader = BufReader::new(stream);
         let buffer = reader.fill_buf()?.to_vec();
@@ -62,7 +64,9 @@ impl UpdateProvider {
         Ok(request)
     }
 
-    fn write_http_response(&self, stream: &mut TcpStream, response: http::Response<&str>) -> UResult {
+    fn write_http_response<T>(&self, stream: &mut T, response: http::Response<&str>) -> UResult
+        where T: std::io::Write
+    {
         let (parts, body) = response.into_parts();
         let version = match parts.version {
             Version::HTTP_09 => "HTTP/0.9",
@@ -87,7 +91,8 @@ impl UpdateProvider {
             .header("Content-Type", "application/json")
             .body(r#"{"result":"ok"}"#)
             .unwrap();
-        // let conn = ServerConnection::new(self.tls_config.clone())?;
+        let mut conn = ServerConnection::new(self.tls_config.clone())?;
+        let mut stream = rustls::Stream::new(&mut conn, &mut stream);
         let request = self.read_http_request(&mut stream)?;
         debug!(self.logger, "Received http data"; "data" => format!("{:#?}", request));
         self.write_http_response(&mut stream, response)?;
