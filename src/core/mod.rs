@@ -105,6 +105,7 @@ impl UpdateProvider {
 
     fn handle_stream(&self, mut stream: TcpStream) -> UResult {
         let response = http::Response::builder()
+            .version(http::Version::HTTP_11)
             .status(200)
             .header("Content-Type", "application/json")
             .body(r#"{"result":"ok"}"#)
