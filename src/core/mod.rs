@@ -113,9 +113,9 @@ impl UpdateProvider {
         let mut conn = ServerConnection::new(self.tls_config.clone())?;
         let mut stream = rustls::Stream::new(&mut conn, &mut stream);
         let request = self.read_http_request(&mut stream)?;
-        debug!(self.logger, "Received http data"; "data" => format!("{:#?}", request));
+        info!(self.logger, "Received http data"; "data" => format!("{:#?}", request));
         self.write_http_response(&mut stream, response)?;
-        debug!(self.logger, "Successfully responded");
+        info!(self.logger, "Successfully responded");
         Ok(())
     }
 
