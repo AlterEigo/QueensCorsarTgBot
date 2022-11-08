@@ -8,7 +8,7 @@ use std::net::TcpListener;
 use crate::prelude::*;
 use tokio::main;
 
-use telegram_bot_api::{bot, methods, types};
+use telegram_bot_api::{bot, methods::{self, SetWebhook}, types};
 
 const CRATE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -40,6 +40,16 @@ async fn main() -> UResult {
         return Err("BotApi instantiation error".into());
     }
     let bot = bot.unwrap();
+    {
+        let mut webhook = SetWebhook::new("https://45.67.230.27/".into());
+        webhook.ip_address = Some("45.67.230.27".into());
+        webhook.allowed_updates = Some(vec!["message".into()]);
+        webhook.certificate = Some(load_input_file("tgbot.crt")?);
+        if let Err(err) = bot.set_webhook(webhook).await {
+            error!(logger, "Unable to set up the webhook"; "reason" => err.to_string());
+            return Err("Webhook set up error".into());
+        }
+    }
 
     let server_thread = {
         let tls_config = create_server_config();
