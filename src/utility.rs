@@ -1,7 +1,8 @@
 use std::io::{BufReader, BufRead};
 use std::iter;
 
-use rustls::{Certificate, PrivateKey, ServerConfig};
+use rustls::version::TLS13;
+use rustls::{Certificate, PrivateKey, ServerConfig, ConfigBuilder, SupportedProtocolVersion};
 use rustls_pemfile::{read_one, Item};
 use telegram_bot_api::types::InputFile;
 
@@ -12,7 +13,7 @@ pub fn load_input_file(file_path: &str) -> UResult<InputFile> {
     let mut reader = BufReader::new(file);
 
     let bytes = reader.fill_buf()?.to_vec();
-    Ok(InputFile::FileBytes("public_certificate".into(), bytes))
+    Ok(InputFile::FileBytes(file_path.into(), bytes))
 }
 
 pub fn load_x509_certs(crt_path: &str) -> UResult<Vec<Certificate>> {
@@ -51,8 +52,11 @@ pub fn load_x509_credentials() -> UResult<(Vec<Certificate>, PrivateKey)> {
 
 pub fn create_server_config() -> UResult<ServerConfig> {
     let (certs, pkey) = load_x509_credentials()?;
+    let protocols: &[&'static SupportedProtocolVersion] = &[&TLS13];
     Ok(ServerConfig::builder()
-        .with_safe_defaults()
+        .with_safe_default_cipher_suites()
+        .with_safe_default_kx_groups()
+        .with_protocol_versions(protocols)?
         .with_no_client_auth()
         .with_single_cert(certs, pkey)?)
 }
