@@ -8,7 +8,7 @@ use std::net::TcpListener;
 use crate::prelude::*;
 use tokio::main;
 
-use telegram_bot_api::{bot, methods::{self, SetWebhook}, types};
+use telegram_bot_api::{bot, methods::{self, SetWebhook, DeleteWebhook}, types};
 
 const CRATE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -40,15 +40,31 @@ async fn main() -> UResult {
         return Err("BotApi instantiation error".into());
     }
     let bot = bot.unwrap();
-    {
-        let mut webhook = SetWebhook::new("https://45.67.230.27/".into());
-        webhook.ip_address = Some("45.67.230.27".into());
-        webhook.allowed_updates = Some(vec!["message".into()]);
+    let is_webhook_setup = {
+        let infos = bot.get_webhook_info().await;
+        if let Err(err) = infos {
+            crit!(logger, "Unable to get webhook infos!");
+            return Err("Webhook infos request error".into());
+        }
+        let infos = infos.unwrap();
+        info!(logger, "Webhook status"; "infos" => format!("{:#?}", infos));
+        !infos.url.is_empty()
+    };
+
+    if !is_webhook_setup {
+        // let mut delete_req = DeleteWebhook::new();
+        // delete_req.drop_pending_updates = Some(true);
+        // bot.delete_webhook(delete_req).await.unwrap();
+        let mut webhook = SetWebhook::new("https://45.67.230.27:8443/".into());
+        // webhook.ip_address = Some("45.67.230.27".into());
+        // webhook.allowed_updates = Some(vec!["message".into()]);
         webhook.certificate = Some(load_input_file("tgbot.crt")?);
+        info!(logger, "Setting up webhook...");
         if let Err(err) = bot.set_webhook(webhook).await {
             error!(logger, "Unable to set up the webhook"; "reason" => err.to_string());
             return Err("Webhook set up error".into());
         }
+        info!(logger, "Successfully set up telegram webhook");
     }
 
     let server_thread = {
@@ -60,8 +76,8 @@ async fn main() -> UResult {
         let tls_config = tls_config.unwrap();
         info!(logger, "TLS config successfully initialized");
 
-        let server = TcpListener::bind("127.0.0.1:8080")?;
-        info!(logger, "Starting server at port 8080");
+        let server = TcpListener::bind("45.67.230.27:8443")?;
+        info!(logger, "Starting server at port 8443");
 
         UpdateProvider::new()
             .logger(logger.clone())
@@ -70,6 +86,7 @@ async fn main() -> UResult {
             .build()
             .listen()
     };
+    info!(logger, "Server thread engaged");
 
     if let Err(err) = server_thread.await {
         crit!(logger, "Critical error while running the server"; "reason" => err.to_string());
