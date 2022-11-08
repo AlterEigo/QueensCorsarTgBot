@@ -119,7 +119,7 @@ impl UpdateProvider {
         Ok(())
     }
 
-    pub async fn listen(&self) -> UResult {
+    pub async fn listen(self) -> UResult {
         for stream in self.tcp_handle.incoming() {
             debug!(self.logger, "Handling incoming request");
             if let Err(err) = stream {
@@ -133,7 +133,7 @@ impl UpdateProvider {
             }
             let stream = stream.unwrap();
 
-            if let Err(why) = Self::handle_stream(self, stream) {
+            if let Err(why) = Self::handle_stream(&self, stream) {
                 error!(self.logger, "Error while handling a tcp stream"; "reason" => why.to_string());
                 continue;
             };
