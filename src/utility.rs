@@ -1,10 +1,19 @@
-use std::io::BufReader;
+use std::io::{BufReader, BufRead};
 use std::iter;
 
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use rustls_pemfile::{read_one, Item};
+use telegram_bot_api::types::InputFile;
 
 use crate::prelude::UResult;
+
+pub fn load_input_file(file_path: &str) -> UResult<InputFile> {
+    let file = std::fs::File::open(std::path::Path::new(file_path))?;
+    let mut reader = BufReader::new(file);
+
+    let bytes = reader.fill_buf()?.to_vec();
+    Ok(InputFile::FileBytes("public_certificate".into(), bytes))
+}
 
 pub fn load_x509_certs(crt_path: &str) -> UResult<Vec<Certificate>> {
     let cert_file = std::fs::File::open(std::path::Path::new(crt_path))?;
