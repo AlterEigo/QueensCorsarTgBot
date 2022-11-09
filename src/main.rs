@@ -11,7 +11,7 @@ use tokio::main;
 
 use telegram_bot_api::{
     bot,
-    methods::{self, DeleteWebhook, SetWebhook},
+    methods::{self, DeleteWebhook, SetWebhook, Methods},
     types,
 };
 
@@ -45,7 +45,7 @@ async fn main() -> UResult {
         return Err("BotApi instantiation error".into());
     }
     let bot = bot.unwrap();
-    let is_webhook_setup = {
+    {
         let infos = bot.get_webhook_info().await;
         if let Err(err) = infos {
             crit!(logger, "Unable to get webhook infos!");
@@ -53,23 +53,6 @@ async fn main() -> UResult {
         }
         let infos = infos.unwrap();
         info!(logger, "Webhook status"; "infos" => format!("{:#?}", infos));
-        !infos.url.is_empty()
-    };
-
-    if !is_webhook_setup {
-        // let mut delete_req = DeleteWebhook::new();
-        // delete_req.drop_pending_updates = Some(true);
-        // bot.delete_webhook(delete_req).await.unwrap();
-        let mut webhook = SetWebhook::new(format!("https://{}:{}/", config.server_ip, config.server_port).into());
-        // webhook.ip_address = Some("45.67.230.27".into());
-        // webhook.allowed_updates = Some(vec!["message".into()]);
-        webhook.certificate = Some(load_input_file(&config.certificate_path)?);
-        info!(logger, "Setting up webhook...");
-        if let Err(err) = bot.set_webhook(webhook).await {
-            error!(logger, "Unable to set up the webhook"; "reason" => err.to_string());
-            return Err("Webhook set up error".into());
-        }
-        info!(logger, "Successfully set up telegram webhook");
     }
 
     let server_thread = {
