@@ -60,7 +60,7 @@ async fn main() -> UResult {
         // let mut delete_req = DeleteWebhook::new();
         // delete_req.drop_pending_updates = Some(true);
         // bot.delete_webhook(delete_req).await.unwrap();
-        let mut webhook = SetWebhook::new(format!("https://{}:8443/", config.server_ip).into());
+        let mut webhook = SetWebhook::new(format!("https://{}:{}/", config.server_ip, config.server_port).into());
         // webhook.ip_address = Some("45.67.230.27".into());
         // webhook.allowed_updates = Some(vec!["message".into()]);
         webhook.certificate = Some(load_input_file(&config.certificate_path)?);
