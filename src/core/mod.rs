@@ -189,7 +189,10 @@ impl UpdateProviderBuilder {
                 .ok_or("TCP Listener not provided".to_owned())?,
             stop_requested: false.into(),
             logger: self.logger.ok_or("Logger not provided".to_owned())?,
-            tls_config: Arc::new(self.tls_config.ok_or("TLS Config not provided".to_owned())?),
+            tls_config: Arc::new(
+                self.tls_config
+                    .ok_or("TLS Config not provided".to_owned())?,
+            ),
         };
         Ok(provider)
     }
