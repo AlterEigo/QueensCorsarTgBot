@@ -7,9 +7,10 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
-use http::Version;
+use http::{Version, Request};
 use rustls::{ServerConfig, ServerConnection};
 use slog::Logger;
+use telegram_bot_api::types::Update;
 
 use crate::prelude::*;
 
@@ -103,6 +104,12 @@ impl UpdateProvider {
         Ok(())
     }
 
+    fn dispath_request(&self, request: Request<String>) -> UResult {
+        let update = serde_json::from_str::<Update>(request.body())?;
+        debug!(self.logger, "Received an update"; "update" => format!("{:#?}", update));
+        Ok(())
+    }
+
     fn handle_stream(&self, mut stream: TcpStream) -> UResult {
         let response = http::Response::builder()
             .version(http::Version::HTTP_11)
@@ -113,7 +120,7 @@ impl UpdateProvider {
         let mut conn = ServerConnection::new(self.tls_config.clone())?;
         let mut stream = rustls::Stream::new(&mut conn, &mut stream);
         let request = self.read_http_request(&mut stream)?;
-        info!(self.logger, "Received http data"; "data" => format!("{:#?}", request));
+        self.dispath_request(request)?;
         self.write_http_response(&mut stream, response)?;
         info!(self.logger, "Successfully responded");
         Ok(())
