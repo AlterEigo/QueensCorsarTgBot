@@ -8,7 +8,11 @@ use std::net::TcpListener;
 use crate::prelude::*;
 use tokio::main;
 
-use telegram_bot_api::{bot, methods::{self, SetWebhook, DeleteWebhook}, types};
+use telegram_bot_api::{
+    bot,
+    methods::{self, DeleteWebhook, SetWebhook},
+    types,
+};
 
 const CRATE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -83,7 +87,7 @@ async fn main() -> UResult {
             .logger(logger.clone())
             .listener(server)
             .tls_config(tls_config)
-            .build()
+            .build()?
             .listen()
     };
     info!(logger, "Server thread engaged");

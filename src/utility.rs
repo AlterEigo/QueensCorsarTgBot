@@ -1,8 +1,8 @@
-use std::io::{BufReader, BufRead};
+use std::io::{BufRead, BufReader};
 use std::iter;
 
 use rustls::version::TLS13;
-use rustls::{Certificate, PrivateKey, ServerConfig, ConfigBuilder, SupportedProtocolVersion};
+use rustls::{Certificate, ConfigBuilder, PrivateKey, ServerConfig, SupportedProtocolVersion};
 use rustls_pemfile::{read_one, Item};
 use telegram_bot_api::types::InputFile;
 

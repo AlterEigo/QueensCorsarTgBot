@@ -182,12 +182,15 @@ impl UpdateProviderBuilder {
         }
     }
 
-    pub fn build(self) -> UpdateProvider {
-        UpdateProvider {
-            tcp_handle: self.tcp_listener.unwrap(),
+    pub fn build(self) -> UResult<UpdateProvider> {
+        let provider = UpdateProvider {
+            tcp_handle: self
+                .tcp_listener
+                .ok_or("TCP Listener not provided".to_owned())?,
             stop_requested: false.into(),
-            logger: self.logger.unwrap(),
-            tls_config: Arc::new(self.tls_config.unwrap()),
-        }
+            logger: self.logger.ok_or("Logger not provided".to_owned())?,
+            tls_config: Arc::new(self.tls_config.ok_or("TLS Config not provided".to_owned())?),
+        };
+        Ok(provider)
     }
 }
