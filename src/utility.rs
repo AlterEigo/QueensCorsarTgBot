@@ -10,11 +10,11 @@ use crate::config::Config;
 use crate::prelude::UResult;
 
 pub fn load_input_file(file_path: &str) -> UResult<InputFile> {
-    let file = std::fs::File::open(std::path::Path::new(file_path))?;
-    let mut reader = BufReader::new(file);
+    // let file = std::fs::File::open(std::path::Path::new(file_path))?;
+    // let mut reader = BufReader::new(file);
 
-    let bytes = reader.fill_buf()?.to_vec();
-    Ok(InputFile::FileBytes(file_path.into(), bytes))
+    // let bytes = reader.fill_buf()?.to_vec();
+    Ok(InputFile::FilePath(file_path.into()))
 }
 
 pub fn load_x509_certs(crt_path: &str) -> UResult<Vec<Certificate>> {
