@@ -6,6 +6,7 @@ use rustls::{Certificate, ConfigBuilder, PrivateKey, ServerConfig, SupportedProt
 use rustls_pemfile::{read_one, Item};
 use telegram_bot_api::types::InputFile;
 
+use crate::config::Config;
 use crate::prelude::UResult;
 
 pub fn load_input_file(file_path: &str) -> UResult<InputFile> {
@@ -44,14 +45,14 @@ pub fn load_x509_secret_key(key_path: &str) -> UResult<PrivateKey> {
     Ok(key)
 }
 
-pub fn load_x509_credentials() -> UResult<(Vec<Certificate>, PrivateKey)> {
-    let certs = load_x509_certs("tgbot.crt")?;
-    let key = load_x509_secret_key("tgbot.key")?;
+pub fn load_x509_credentials(config: &Config) -> UResult<(Vec<Certificate>, PrivateKey)> {
+    let certs = load_x509_certs(&config.certificate_path)?;
+    let key = load_x509_secret_key(&config.private_key_path)?;
     Ok((certs, key))
 }
 
-pub fn create_server_config() -> UResult<ServerConfig> {
-    let (certs, pkey) = load_x509_credentials()?;
+pub fn create_server_config(config: &Config) -> UResult<ServerConfig> {
+    let (certs, pkey) = load_x509_credentials(config)?;
     let protocols: &[&'static SupportedProtocolVersion] = &[&TLS13];
     Ok(ServerConfig::builder()
         .with_safe_default_cipher_suites()

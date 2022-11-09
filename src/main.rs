@@ -1,8 +1,8 @@
+mod config;
 mod core;
 mod logger;
 mod prelude;
 mod utility;
-mod config;
 
 use std::net::TcpListener;
 
@@ -15,20 +15,19 @@ use telegram_bot_api::{
     types,
 };
 
-const CRATE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
-
 #[tokio::main]
 async fn main() -> UResult {
+    let config = &config::APP_CONFIG;
     let logger = configure_term_root();
 
     info!(logger, "Starting QueenCorsar telegram bot";
         "upstream" => "https://github.com/AlterEigo/QueensCorsarTgBot",
         "email" => "iaroslav.sorokin@gmail.com",
         "author" => "Iaroslav Sorokin",
-        "version" => CRATE_VERSION,
+        "version" => config::PACKAGE_VERSION,
     );
 
-    let token = std::env::var("QUEENSCORSAR_TG_TOKEN");
+    let token = std::env::var(&config.token_var);
     if token.is_err() {
         crit!(logger, "Could not fetch API token from the environment");
         return Err(token.err().unwrap().into());
@@ -40,7 +39,8 @@ async fn main() -> UResult {
     if bot.is_err() {
         crit!(
             logger,
-            "Could not instantiate the bot with the provided token"
+            "Could not instantiate the bot with the provided token";
+            "env token" => &config.token_var
         );
         return Err("BotApi instantiation error".into());
     }
@@ -60,10 +60,10 @@ async fn main() -> UResult {
         // let mut delete_req = DeleteWebhook::new();
         // delete_req.drop_pending_updates = Some(true);
         // bot.delete_webhook(delete_req).await.unwrap();
-        let mut webhook = SetWebhook::new("https://45.67.230.27:8443/".into());
+        let mut webhook = SetWebhook::new(format!("https://{}:8443/", config.server_ip).into());
         // webhook.ip_address = Some("45.67.230.27".into());
         // webhook.allowed_updates = Some(vec!["message".into()]);
-        webhook.certificate = Some(load_input_file("tgbot.crt")?);
+        webhook.certificate = Some(load_input_file(&config.private_key_path)?);
         info!(logger, "Setting up webhook...");
         if let Err(err) = bot.set_webhook(webhook).await {
             error!(logger, "Unable to set up the webhook"; "reason" => err.to_string());
@@ -73,7 +73,7 @@ async fn main() -> UResult {
     }
 
     let server_thread = {
-        let tls_config = create_server_config();
+        let tls_config = create_server_config(&config);
         if let Err(why) = tls_config {
             crit!(logger, "Could not instantiate a valid TLS config"; "reason" => why.to_string());
             return Err(why.into());
@@ -81,8 +81,8 @@ async fn main() -> UResult {
         let tls_config = tls_config.unwrap();
         info!(logger, "TLS config successfully initialized");
 
-        let server = TcpListener::bind("45.67.230.27:8443")?;
-        info!(logger, "Starting server at port 8443");
+        let server = TcpListener::bind(format!("{}:{}", &config.server_ip, &config.server_port))?;
+        info!(logger, "Starting server at {}:{}", &config.server_ip, &config.server_port);
 
         UpdateProvider::new()
             .logger(logger.clone())
