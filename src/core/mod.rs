@@ -115,7 +115,7 @@ impl UpdateProvider {
         Ok(())
     }
 
-    fn dispath_request(&self, request: Request<String>) -> UResult {
+    fn dispatch_request(&self, request: Request<String>) -> UResult {
         let update = serde_json::from_str::<Update>(request.body())?;
         debug!(self.logger, "Received an update"; "update" => format!("{:#?}", update));
         Ok(())
@@ -131,7 +131,7 @@ impl UpdateProvider {
         let mut conn = ServerConnection::new(self.tls_config.clone())?;
         let mut stream = rustls::Stream::new(&mut conn, &mut stream);
         let request = self.read_http_request(&mut stream)?;
-        self.dispath_request(request)?;
+        self.dispatch_request(request)?;
         self.write_http_response(&mut stream, response)?;
         info!(self.logger, "Successfully responded");
         Ok(())
