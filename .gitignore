@@ -3,5 +3,6 @@
 !*.rs
 !*.toml
 !.gitignore
+!bot_config.toml
 
 target/
