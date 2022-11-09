@@ -16,7 +16,6 @@ impl Default for Config {
     fn default() -> Self {
         toml::from_str::<Config>(
             r#"
-            [config]
             server_ip = '127.0.0.1'
             server_port = 8443
             private_key_path = 'private.key'
