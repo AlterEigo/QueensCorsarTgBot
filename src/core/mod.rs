@@ -10,11 +10,22 @@ use std::{
 use http::{Version, Request};
 use rustls::{ServerConfig, ServerConnection};
 use slog::Logger;
-use telegram_bot_api::types::Update;
+use telegram_bot_api::types::{Update, Message};
 
 use crate::prelude::*;
 
-pub trait UpdateHandler {}
+pub struct UpdateContext;
+
+pub trait UpdateHandler {
+    fn message(&self, context: &UpdateContext, message: Message) {}
+}
+
+struct DefaultHandler;
+impl UpdateHandler for DefaultHandler {
+    fn message(&self, context: &UpdateContext, message: Message) {
+        todo!()
+    }
+}
 
 fn parse_http_version(v: u8) -> UResult<http::Version> {
     match v {
@@ -26,12 +37,12 @@ fn parse_http_version(v: u8) -> UResult<http::Version> {
     }
 }
 
-#[derive(Debug)]
 pub struct UpdateProvider {
     tcp_handle: TcpListener,
     stop_requested: AtomicBool,
     logger: Logger,
     tls_config: Arc<ServerConfig>,
+    handler: Box<dyn UpdateHandler>
 }
 
 impl UpdateProvider {
@@ -160,11 +171,12 @@ impl UpdateProvider {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub struct UpdateProviderBuilder {
     tcp_listener: Option<TcpListener>,
     logger: Option<Logger>,
     tls_config: Option<ServerConfig>,
+    update_handler: Option<Box<dyn UpdateHandler>>
 }
 
 impl UpdateProviderBuilder {
@@ -189,6 +201,14 @@ impl UpdateProviderBuilder {
         }
     }
 
+    pub fn update_handler(self, handler: Box<dyn UpdateHandler>) -> Self
+    {
+        Self {
+            update_handler: Some(handler),
+            ..self
+        }
+    }
+
     pub fn build(self) -> UResult<UpdateProvider> {
         let provider = UpdateProvider {
             tcp_handle: self
@@ -200,6 +220,7 @@ impl UpdateProviderBuilder {
                 self.tls_config
                     .ok_or("TLS Config not provided".to_owned())?,
             ),
+            handler: self.update_handler.unwrap_or(Box::new(DefaultHandler {}))
         };
         Ok(provider)
     }
