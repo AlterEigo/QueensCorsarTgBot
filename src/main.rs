@@ -2,6 +2,7 @@ mod core;
 mod logger;
 mod prelude;
 mod utility;
+mod config;
 
 use std::net::TcpListener;
 
