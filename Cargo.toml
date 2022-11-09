@@ -17,6 +17,7 @@ http = "0.2.8"
 httparse = "1.8.0"
 rustls = "0.20.7"
 rustls-pemfile = "1.0.1"
+lazy_static = "1.4.0"
 
 [dependencies.tokio]
 version = "1"
