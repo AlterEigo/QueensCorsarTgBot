@@ -63,7 +63,7 @@ async fn main() -> UResult {
         let mut webhook = SetWebhook::new(format!("https://{}:8443/", config.server_ip).into());
         // webhook.ip_address = Some("45.67.230.27".into());
         // webhook.allowed_updates = Some(vec!["message".into()]);
-        webhook.certificate = Some(load_input_file(&config.private_key_path)?);
+        webhook.certificate = Some(load_input_file(&config.certificate_path)?);
         info!(logger, "Setting up webhook...");
         if let Err(err) = bot.set_webhook(webhook).await {
             error!(logger, "Unable to set up the webhook"; "reason" => err.to_string());
