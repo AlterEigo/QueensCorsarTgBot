@@ -1,6 +1,7 @@
 use std::io;
 use std::io::Write;
 use std::sync::Arc;
+use std::thread::{JoinHandle, ScopedJoinHandle};
 use std::{
     io::{BufRead, BufReader, BufWriter, Read},
     net::{TcpListener, TcpStream},
@@ -16,7 +17,7 @@ use crate::prelude::*;
 
 pub struct UpdateContext;
 
-pub trait UpdateHandler {
+pub trait UpdateHandler: Send + Sync {
     fn message(&self, context: &UpdateContext, message: Message) {}
 }
 
@@ -142,28 +143,39 @@ impl UpdateProvider {
     }
 
     pub async fn listen(self) -> UResult {
-        for stream in self.tcp_handle.incoming() {
-            debug!(self.logger, "Handling incoming request");
-            if let Err(err) = stream {
-                match err.kind() {
-                    io::ErrorKind::WouldBlock => continue,
-                    _ => {
-                        error!(self.logger, "TCP stream error"; "reason" => err.to_string());
-                        return Err(err.into());
+        std::thread::scope(|scope| -> UResult {
+            let mut workers: Vec<ScopedJoinHandle<UResult>> = Vec::new();
+            for stream in self.tcp_handle.incoming() {
+                debug!(self.logger, "Handling incoming request");
+                if let Err(err) = stream {
+                    match err.kind() {
+                        io::ErrorKind::WouldBlock => continue,
+                        _ => {
+                            error!(self.logger, "TCP stream error"; "reason" => err.to_string());
+                            return Err(err.into());
+                        }
+                    };
+                }
+                let stream = stream.unwrap();
+                let worker = scope.spawn(|| {
+                    if let Err(why) = self.handle_stream(stream) {
+                        error!(self.logger, "TCP stream handling error"; "error" => format!("{:#?}", why));
                     }
-                };
-            }
-            let stream = stream.unwrap();
+                    Ok(())
+                });
+                workers.push(worker);
 
-            if let Err(why) = Self::handle_stream(&self, stream) {
-                error!(self.logger, "Error while handling a tcp stream"; "reason" => why.to_string());
-                continue;
-            };
-            if self.is_stopped() {
-                break;
+                if self.is_stopped() {
+                    break;
+                }
             }
-        }
-        Ok(())
+            for w in workers {
+                if let Err(why) = w.join() {
+                    error!(self.logger, "Error while joining the worker thread"; "reason" => format!("{:#?}", why));
+                }
+            }
+            Ok(())
+        })
     }
 
     pub fn request_stop(&mut self) {
