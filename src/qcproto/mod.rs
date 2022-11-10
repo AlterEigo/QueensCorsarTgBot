@@ -3,7 +3,9 @@ use std::os::unix::net::UnixListener;
 use std::time::Duration;
 use std::{os::unix::net::UnixStream, io::Read};
 use std::io::Write;
-use std::sync::atomic::AtomicBool;
+use std::io;
+use std::sync::atomic::{Ordering, AtomicBool};
+use std::thread::{Scope,ScopedJoinHandle};
 
 use serde::{Serialize,Deserialize};
 use slog::Logger;
@@ -38,6 +40,64 @@ pub struct CommandProvider {
     stop_requested: AtomicBool,
     logger: Logger,
     handler: Box<dyn CommandHandler>,
+}
+
+impl CommandProvider {
+    pub fn new() -> CommandProviderBuilder {
+        CommandProviderBuilder::default()
+    }
+
+    fn dispatch_command(&self, cmd: Command) -> UResult {
+        todo!()
+    }
+
+    fn handle_stream(&self, mut stream: UnixStream) -> UResult {
+        todo!()
+    }
+
+    pub async fn listen(self) -> UResult {
+        std::thread::scope(|scope| -> UResult {
+            let mut workers: Vec<ScopedJoinHandle<UResult>> = Vec::new();
+            for stream in self.tunnel.incoming() {
+                debug!(self.logger, "Handling incoming request");
+                if let Err(err) = stream {
+                    match err.kind() {
+                        io::ErrorKind::WouldBlock => continue,
+                        _ => {
+                            error!(self.logger, "TCP stream error"; "reason" => err.to_string());
+                            return Err(err.into());
+                        }
+                    };
+                }
+                let stream = stream.unwrap();
+                let worker = scope.spawn(|| {
+                    if let Err(why) = self.handle_stream(stream) {
+                        error!(self.logger, "TCP stream handling error"; "error" => format!("{:#?}", why));
+                    }
+                    Ok(())
+                });
+                workers.push(worker);
+
+                if self.is_stopped() {
+                    break;
+                }
+            }
+            for w in workers {
+                if let Err(why) = w.join() {
+                    error!(self.logger, "Error while joining the worker thread"; "reason" => format!("{:#?}", why));
+                }
+            }
+            Ok(())
+        })
+    }
+
+    pub fn request_stop(&mut self) {
+        self.stop_requested.store(false, Ordering::Relaxed)
+    }
+
+    pub fn is_stopped(&self) -> bool {
+        self.stop_requested.load(Ordering::Relaxed)
+    }
 }
 
 #[derive(Default)]
@@ -113,7 +173,7 @@ impl CommandSender {
 
 pub struct CommandContext;
 
-pub trait CommandHandler {
+pub trait CommandHandler: Send + Sync {
 
     fn dispatch_command(&mut self, ctx: &mut CommandContext, cmd: Command) -> UResult;
 
