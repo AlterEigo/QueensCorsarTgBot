@@ -67,7 +67,7 @@ impl CommandProvider {
                     match err.kind() {
                         io::ErrorKind::WouldBlock => continue,
                         _ => {
-                            error!(self.logger, "TCP stream error"; "reason" => err.to_string());
+                            error!(self.logger, "Unix socket stream error"; "reason" => err.to_string());
                             return Err(err.into());
                         }
                     };
@@ -75,7 +75,7 @@ impl CommandProvider {
                 let stream = stream.unwrap();
                 let worker = scope.spawn(|| {
                     if let Err(why) = self.handle_stream(stream) {
-                        error!(self.logger, "TCP stream handling error"; "error" => format!("{:#?}", why));
+                        error!(self.logger, "Unix socket stream handling error"; "error" => format!("{:#?}", why));
                     }
                     Ok(())
                 });
