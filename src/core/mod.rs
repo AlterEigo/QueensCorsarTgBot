@@ -8,10 +8,10 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
-use http::{Version, Request};
+use http::{Request, Version};
 use rustls::{ServerConfig, ServerConnection};
 use slog::Logger;
-use telegram_bot_api::types::{Update, Message};
+use telegram_bot_api::types::{Message, Update};
 
 use crate::prelude::*;
 
@@ -43,7 +43,7 @@ pub struct UpdateProvider {
     stop_requested: AtomicBool,
     logger: Logger,
     tls_config: Arc<ServerConfig>,
-    handler: Box<dyn UpdateHandler>
+    handler: Box<dyn UpdateHandler>,
 }
 
 impl UpdateProvider {
@@ -192,7 +192,7 @@ pub struct UpdateProviderBuilder {
     tcp_listener: Option<TcpListener>,
     logger: Option<Logger>,
     tls_config: Option<ServerConfig>,
-    update_handler: Option<Box<dyn UpdateHandler>>
+    update_handler: Option<Box<dyn UpdateHandler>>,
 }
 
 impl UpdateProviderBuilder {
@@ -217,8 +217,7 @@ impl UpdateProviderBuilder {
         }
     }
 
-    pub fn update_handler(self, handler: Box<dyn UpdateHandler>) -> Self
-    {
+    pub fn update_handler(self, handler: Box<dyn UpdateHandler>) -> Self {
         Self {
             update_handler: Some(handler),
             ..self
@@ -236,7 +235,7 @@ impl UpdateProviderBuilder {
                 self.tls_config
                     .ok_or("TLS Config not provided".to_owned())?,
             ),
-            handler: self.update_handler.unwrap_or(Box::new(DefaultHandler {}))
+            handler: self.update_handler.unwrap_or(Box::new(DefaultHandler {})),
         };
         Ok(provider)
     }

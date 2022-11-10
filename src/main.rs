@@ -3,6 +3,7 @@ mod core;
 mod logger;
 mod prelude;
 mod utility;
+mod qcproto;
 
 use std::net::TcpListener;
 
@@ -11,7 +12,7 @@ use tokio::main;
 
 use telegram_bot_api::{
     bot,
-    methods::{self, DeleteWebhook, SetWebhook, Methods},
+    methods::{self, DeleteWebhook, Methods, SetWebhook},
     types,
 };
 
@@ -65,7 +66,10 @@ async fn main() -> UResult {
         info!(logger, "TLS config successfully initialized");
 
         let server = TcpListener::bind(format!("{}:{}", &config.server_ip, &config.server_port))?;
-        info!(logger, "Starting server at {}:{}", &config.server_ip, &config.server_port);
+        info!(
+            logger,
+            "Starting server at {}:{}", &config.server_ip, &config.server_port
+        );
 
         UpdateProvider::new()
             .logger(logger.clone())
