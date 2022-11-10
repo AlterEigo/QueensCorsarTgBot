@@ -55,7 +55,8 @@ impl CommandProvider {
         let mut command = String::new();
         stream.read_to_string(&mut command)?;
         let command = serde_json::from_str::<Command>(&command)?;
-        self.dispatch_command(command)
+        let mut dummy_context = CommandContext {};
+        self.handler.dispatch_command(&mut dummy_context, command)
     }
 
     pub async fn listen(self) -> UResult {
@@ -178,6 +179,6 @@ pub struct CommandContext;
 
 pub trait CommandHandler: Send + Sync {
 
-    fn dispatch_command(&mut self, ctx: &mut CommandContext, cmd: Command) -> UResult;
+    fn dispatch_command(&self, ctx: &mut CommandContext, cmd: Command) -> UResult;
 
 }
