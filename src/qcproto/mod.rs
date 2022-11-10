@@ -52,7 +52,10 @@ impl CommandProvider {
     }
 
     fn handle_stream(&self, mut stream: UnixStream) -> UResult {
-        todo!()
+        let mut command = String::new();
+        stream.read_to_string(&mut command)?;
+        let command = serde_json::from_str::<Command>(&command)?;
+        self.dispatch_command(command)
     }
 
     pub async fn listen(self) -> UResult {
