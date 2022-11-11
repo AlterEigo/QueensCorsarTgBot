@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::io::{BufRead, BufReader};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Config {
     pub server_ip: String,
     pub server_port: u16,
