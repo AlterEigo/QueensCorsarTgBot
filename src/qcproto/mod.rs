@@ -1,23 +1,23 @@
 use std::fmt::Display;
-use std::os::unix::net::UnixListener;
-use std::time::Duration;
-use std::{os::unix::net::UnixStream, io::Read};
-use std::io::Write;
 use std::io;
-use std::sync::atomic::{Ordering, AtomicBool};
-use std::thread::{Scope,ScopedJoinHandle};
+use std::io::Write;
+use std::os::unix::net::UnixListener;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread::{Scope, ScopedJoinHandle};
+use std::time::Duration;
+use std::{io::Read, os::unix::net::UnixStream};
 
-use serde::{Serialize,Deserialize};
+use serde::{Deserialize, Serialize};
 use slog::Logger;
 
 use crate::prelude::*;
 
 const PROTOCOL_VERSION: u16 = 100;
 
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Command;
 
-#[derive(Serialize,Deserialize,Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum TransmissionResult {
     Received,
     BadSyntax,
@@ -29,7 +29,7 @@ impl Display for TransmissionResult {
         match &self {
             TransmissionResult::Received => write!(f, "Received")?,
             TransmissionResult::BadSyntax => write!(f, "Bad syntax")?,
-            TransmissionResult::MismatchedVersions => write!(f, "Mismatched protocol versions")?
+            TransmissionResult::MismatchedVersions => write!(f, "Mismatched protocol versions")?,
         }
         Ok(())
     }
@@ -140,7 +140,9 @@ impl CommandProviderBuilder {
                 .ok_or("Unix socket listener not provided".to_owned())?,
             stop_requested: false.into(),
             logger: self.logger.ok_or("Logger not provided".to_owned())?,
-            handler: self.command_handler.ok_or("Command handler not provided".to_owned())?,
+            handler: self
+                .command_handler
+                .ok_or("Command handler not provided".to_owned())?,
         };
         Ok(provider)
     }
@@ -170,7 +172,9 @@ impl CommandSender {
         match response {
             TransmissionResult::Received => Ok(()),
             TransmissionResult::BadSyntax => Err("Malformed data syntax reported".into()),
-            TransmissionResult::MismatchedVersions => Err("Mismatched protocol versions reported".into())
+            TransmissionResult::MismatchedVersions => {
+                Err("Mismatched protocol versions reported".into())
+            }
         }
     }
 }
@@ -178,7 +182,5 @@ impl CommandSender {
 pub struct CommandContext;
 
 pub trait CommandHandler: Send + Sync {
-
     fn dispatch_command(&self, ctx: &mut CommandContext, cmd: Command) -> UResult;
-
 }

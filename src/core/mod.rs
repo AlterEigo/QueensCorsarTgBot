@@ -15,6 +15,7 @@ use telegram_bot_api::types::{Message, Update};
 
 use crate::prelude::*;
 
+pub mod application;
 pub struct UpdateContext;
 
 pub trait UpdateHandler: Send + Sync {
