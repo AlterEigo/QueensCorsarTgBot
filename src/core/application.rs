@@ -1,3 +1,4 @@
+use crate::config;
 use crate::prelude::*;
 use std::net::TcpListener;
 use telegram_bot_api::bot;
@@ -5,7 +6,7 @@ use telegram_bot_api::bot;
 #[derive(Clone)]
 pub struct BootstrapRequirements {
     pub logger: slog::Logger,
-    pub config: Config,
+    pub config: config::Config,
     // + cli args
     // + environment
 }
@@ -15,15 +16,17 @@ fn introduce_self(ctx: &BootstrapRequirements) {
         "upstream" => "https://github.com/AlterEigo/QueensCorsarTgBot",
         "email" => "iaroslav.sorokin@gmail.com",
         "author" => "Iaroslav Sorokin",
-        "version" => PACKAGE_VERSION,
+        "version" => config::PACKAGE_VERSION,
     );
-
 }
 
 fn extract_token(ctx: &BootstrapRequirements) -> UResult<String> {
     let token = std::env::var(&ctx.config.token_var);
     if token.is_err() {
-        crit!(ctx.logger, "Could not fetch the API token from the environment");
+        crit!(
+            ctx.logger,
+            "Could not fetch the API token from the environment"
+        );
         Err(token.err().unwrap().into())
     } else {
         Ok(token.unwrap())
@@ -39,7 +42,7 @@ async fn instantiate_tgbot(ctx: &BootstrapRequirements) -> UResult<bot::BotApi> 
         Ok(v) => {
             info!(ctx.logger, "Telegram Bot instantiated");
             Ok(v)
-        },
+        }
         Err(why) => {
             crit!(
                 ctx.logger,
@@ -61,7 +64,10 @@ async fn instantiate_update_listener(ctx: &BootstrapRequirements) -> UResult<Upd
     let tls_config = tls_config.unwrap();
     info!(ctx.logger, "TLS config successfully initialized");
 
-    let server = TcpListener::bind(format!("{}:{}", &ctx.config.server_ip, &ctx.config.server_port))?;
+    let server = TcpListener::bind(format!(
+        "{}:{}",
+        &ctx.config.server_ip, &ctx.config.server_port
+    ))?;
     info!(
         ctx.logger,
         "Starting server at {}:{}", &ctx.config.server_ip, &ctx.config.server_port
@@ -82,7 +88,7 @@ async fn show_webhook_infos(ctx: &BootstrapRequirements, bot: &bot::BotApi) -> U
         Ok(infos) => {
             info!(ctx.logger, "Webhook status"; "infos" => format!("{:#?}", infos));
             Ok(())
-        },
+        }
         Err(_) => {
             crit!(ctx.logger, "Unable to get webhook infos!");
             Err("Webhook infos request error".into())

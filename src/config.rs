@@ -1,7 +1,8 @@
-use lazy_static::lazy_static;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
-use std::io::{BufRead, BufReader};
+
+use crate::prelude::*;
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Config {
@@ -29,25 +30,32 @@ impl Default for Config {
 
 pub const PACKAGE_VERSION: &'static str = std::env!("CARGO_PKG_VERSION");
 
-lazy_static! {
-    pub static ref APP_CONFIG: Config = {
-        const FILENAME: &'static str = "bot_config.toml";
-        let file = match std::fs::File::open(FILENAME) {
-            Ok(opened) => opened,
-            Err(why) => {
-                if why.kind() == std::io::ErrorKind::NotFound {
-                    let default_config = Config::default();
-                    let default_config = toml::to_string(&default_config).unwrap();
-                    let mut file = std::fs::File::create(FILENAME).unwrap();
-                    write!(file, "{}", default_config).unwrap();
-                    file
-                } else {
-                    panic!("{:#?}", why);
-                }
-            }
-        };
-        let mut reader = BufReader::new(file);
-        let contents = String::from_utf8(reader.fill_buf().unwrap().to_vec()).unwrap();
-        toml::from_str::<Config>(&contents).unwrap()
-    };
+pub fn create<T>(cfg_path: &str) -> UResult<T>
+where
+    T: Default + Serialize,
+{
+    let default_config = T::default();
+    let serialized = toml::to_string(&default_config)?;
+    let mut file = std::fs::File::create(cfg_path)?;
+    write!(file, "{}", serialized)?;
+    Ok(default_config)
+}
+
+pub fn read<T>(cfg_path: &str) -> UResult<T>
+where
+    T: DeserializeOwned,
+{
+    let contents = std::fs::read_to_string(&cfg_path)?;
+    let config = toml::from_str::<T>(&contents)?;
+    Ok(config)
+}
+
+pub fn read_or_create<T>(cfg_path: &str) -> UResult<T>
+where
+    T: Default + DeserializeOwned + Serialize,
+{
+    match read::<T>(cfg_path) {
+        Ok(v) => Ok(v),
+        Err(_) => create(cfg_path),
+    }
 }

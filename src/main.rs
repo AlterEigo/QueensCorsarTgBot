@@ -11,7 +11,7 @@ use crate::prelude::*;
 async fn main() -> UResult {
     let requirements = application::BootstrapRequirements {
         logger: logger::configure_compact_root()?,
-        config: config::APP_CONFIG.clone(),
+        config: config::read_or_create("tgbot.toml")?,
     };
 
     application::bootstrap(requirements).await
