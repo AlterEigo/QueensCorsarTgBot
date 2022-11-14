@@ -6,14 +6,22 @@ pub trait Dispatcher<T> {
     fn dispatch(&self, data: T) -> UResult;
 }
 
-pub struct UpdateDispatcher;
-pub struct CommandDispatcher;
+pub struct UpdateDispatcher {
+    handler: Box<dyn UpdateHandler>
+}
 
-impl UpdateDispatcher {
+pub struct CommandDispatcher {
+    handler: Box<dyn CommandHandler>
 }
 
 impl Dispatcher<Update> for UpdateDispatcher {
     fn dispatch(&self, _data: Update) -> UResult {
+        todo!()
+    }
+}
+
+impl Dispatcher<Command> for CommandDispatcher {
+    fn dispatch(&self, _data: Command) -> UResult {
         todo!()
     }
 }
