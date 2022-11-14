@@ -18,6 +18,14 @@ use crate::prelude::*;
 pub mod application;
 pub struct UpdateContext;
 
+mod handler;
+mod provider;
+mod sender;
+
+pub use handler::*;
+pub use provider::*;
+pub use sender::*;
+
 pub trait UpdateHandler: Send + Sync {
     fn message(&self, context: &UpdateContext, message: Message) {}
 }
