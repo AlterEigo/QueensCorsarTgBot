@@ -22,6 +22,7 @@ mod handler;
 mod provider;
 mod sender;
 mod common;
+mod dispatcher;
 
 pub use handler::*;
 pub use provider::*;
