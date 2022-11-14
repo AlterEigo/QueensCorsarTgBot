@@ -10,9 +10,6 @@ pub struct UpdateDispatcher;
 pub struct CommandDispatcher;
 
 impl UpdateDispatcher {
-    pub fn message(&self, _msg: Message) -> UResult {
-        todo!()
-    }
 }
 
 impl Dispatcher<Update> for UpdateDispatcher {
