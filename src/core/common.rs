@@ -22,13 +22,13 @@ pub trait LoggingEntity {
 }
 
 pub trait StreamHandler<T>
-    where T: io::Read + io::Write
+where
+    T: io::Read + io::Write,
 {
     fn handle_stream(&self, stream: T) -> UResult;
 }
 
-pub trait ListenerAdapter<'a>: Send + Sync
-{
+pub trait ListenerAdapter<'a>: Send + Sync {
     type StreamT: io::Read + io::Write + Send + Sync;
     type SockAddrT;
     type IncomingT: 'a + Iterator<Item = io::Result<Self::StreamT>>;
@@ -46,7 +46,7 @@ impl<'a> ListenerAdapter<'a> for net::TcpListener {
     fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)> {
         match self.accept() {
             Ok((stream, addr)) => Ok((stream, addr)),
-            Err(why) => Err(why.into())
+            Err(why) => Err(why.into()),
         }
     }
 
@@ -63,7 +63,7 @@ impl<'a> ListenerAdapter<'a> for uxnet::UnixListener {
     fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)> {
         match self.accept() {
             Ok((stream, addr)) => Ok((stream, addr)),
-            Err(why) => Err(why.into())
+            Err(why) => Err(why.into()),
         }
     }
 
@@ -73,16 +73,18 @@ impl<'a> ListenerAdapter<'a> for uxnet::UnixListener {
 }
 
 pub struct StreamListener<ListenerT>
-    where for<'a> ListenerT: 'a + ListenerAdapter<'a>
+where
+    for<'a> ListenerT: 'a + ListenerAdapter<'a>,
 {
     logger: Logger,
     listener: ListenerT,
-    stop_requested: AtomicBool
+    stop_requested: AtomicBool,
 }
 
 impl<ListenerT, StreamT> StreamHandler<StreamT> for StreamListener<ListenerT>
-    where for<'a> ListenerT: 'a + ListenerAdapter<'a>,
-          StreamT: io::Read + io::Write
+where
+    for<'a> ListenerT: 'a + ListenerAdapter<'a>,
+    StreamT: io::Read + io::Write,
 {
     fn handle_stream(&self, stream: StreamT) -> UResult {
         todo!()
@@ -90,7 +92,8 @@ impl<ListenerT, StreamT> StreamHandler<StreamT> for StreamListener<ListenerT>
 }
 
 impl<ListenerT> StreamListener<ListenerT>
-    where for<'a> ListenerT: 'a + ListenerAdapter<'a>
+where
+    for<'a> ListenerT: 'a + ListenerAdapter<'a>,
 {
     pub fn request_stop(&mut self) {
         self.stop_requested.store(false, Ordering::Relaxed)
@@ -134,6 +137,5 @@ impl<ListenerT> StreamListener<ListenerT>
             }
             Ok(())
         })
-
     }
 }

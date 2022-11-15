@@ -1,4 +1,4 @@
-use telegram_bot_api::types::{Update, Message};
+use telegram_bot_api::types::{Message, Update};
 
 use crate::prelude::*;
 
@@ -7,11 +7,11 @@ pub trait Dispatcher<T> {
 }
 
 pub struct UpdateDispatcher {
-    handler: Box<dyn UpdateHandler>
+    handler: Box<dyn UpdateHandler>,
 }
 
 pub struct CommandDispatcher {
-    handler: Box<dyn CommandHandler>
+    handler: Box<dyn CommandHandler>,
 }
 
 impl Dispatcher<Update> for UpdateDispatcher {

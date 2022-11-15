@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use telegram_bot_api::types::{Update,Message};
+use telegram_bot_api::types::{Message, Update};
 
 pub trait UpdateHandler {
     fn message(&self, _msg: Message) -> UResult;

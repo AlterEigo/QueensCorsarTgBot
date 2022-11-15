@@ -1,5 +1,3 @@
 use crate::prelude::*;
 
-pub trait Sender<T>: Send + Sync {
-
-}
+pub trait Sender<T>: Send + Sync {}

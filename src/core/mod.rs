@@ -18,11 +18,11 @@ use crate::prelude::*;
 pub mod application;
 pub struct UpdateContext;
 
-mod server;
-mod handler;
-mod sender;
 mod common;
 mod dispatcher;
+mod handler;
+mod sender;
+mod server;
 
 pub use handler::*;
 pub use sender::*;
