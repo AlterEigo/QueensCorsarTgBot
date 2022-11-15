@@ -1,31 +1,32 @@
 use telegram_bot_api::types::{Message, Update};
 
 use crate::prelude::*;
+use std::sync::Arc;
 
-pub trait Dispatcher<T> {
+pub trait Dispatcher<T>: Send + Sync {
     fn dispatch(&self, data: T) -> UResult;
 }
 
-pub struct UpdateDispatcher {
-    handler: Box<dyn UpdateHandler>,
+pub struct DefaultUpdateDispatcher {
+    handler: Arc<dyn UpdateHandler>,
 }
 
-pub struct CommandDispatcher {
-    handler: Box<dyn CommandHandler>,
+pub struct DefaultCommandDispatcher {
+    handler: Arc<dyn CommandHandler>,
 }
 
-impl UpdateDispatcher {
-    pub fn new<T>(handler: T) -> Self
+impl DefaultUpdateDispatcher {
+    pub fn new<T>(handler: Arc<T>) -> Self
     where
-        for<'a> T: 'a + UpdateHandler,
+        T: UpdateHandler,
     {
         Self {
-            handler: Box::new(handler),
+            handler: handler.clone(),
         }
     }
 }
 
-impl Dispatcher<Update> for UpdateDispatcher {
+impl Dispatcher<Update> for DefaultUpdateDispatcher {
     fn dispatch(&self, data: Update) -> UResult {
         if let Some(msg) = data.message {
             self.handler.message(msg)?;
@@ -34,7 +35,7 @@ impl Dispatcher<Update> for UpdateDispatcher {
     }
 }
 
-impl Dispatcher<Command> for CommandDispatcher {
+impl Dispatcher<Command> for DefaultCommandDispatcher {
     fn dispatch(&self, _data: Command) -> UResult {
         todo!()
     }
