@@ -24,7 +24,7 @@ pub trait LoggingEntity {
 pub trait StreamHandler<T>
 where
     T: io::Read + io::Write,
-    Self: Send + Sync
+    Self: Send + Sync,
 {
     fn handle_stream(&self, stream: T) -> UResult;
 }
@@ -44,16 +44,14 @@ impl<'a> ListenerAdapter<'a> for net::TcpListener {
     type SockAddrT = net::SocketAddr;
     type IncomingT = net::Incoming<'a>;
 
-    fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)>
-    {
+    fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)> {
         match self.accept() {
             Ok((stream, addr)) => Ok((stream, addr)),
             Err(why) => Err(why.into()),
         }
     }
 
-    fn incoming(&'a self) -> Self::IncomingT
-    {
+    fn incoming(&'a self) -> Self::IncomingT {
         self.incoming()
     }
 }
@@ -63,22 +61,21 @@ impl<'a> ListenerAdapter<'a> for uxnet::UnixListener {
     type SockAddrT = uxnet::SocketAddr;
     type IncomingT = uxnet::Incoming<'a>;
 
-    fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)>
-    {
+    fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)> {
         match self.accept() {
             Ok((stream, addr)) => Ok((stream, addr)),
             Err(why) => Err(why.into()),
         }
     }
 
-    fn incoming(&'a self) -> Self::IncomingT
-    {
+    fn incoming(&'a self) -> Self::IncomingT {
         self.incoming()
     }
 }
 
 pub trait StreamListenerExt<'a, ListenerT>
-    where for<'x> ListenerT: ListenerAdapter<'x>,
+where
+    for<'x> ListenerT: ListenerAdapter<'x>,
 {
     fn request_stop(&'a mut self);
 
@@ -88,7 +85,8 @@ pub trait StreamListenerExt<'a, ListenerT>
 }
 
 pub struct StreamListener<'a, ListenerT>
-    where for<'x> ListenerT: ListenerAdapter<'x>,
+where
+    for<'x> ListenerT: ListenerAdapter<'x>,
 {
     logger: Logger,
     listener: ListenerT,
@@ -97,27 +95,30 @@ pub struct StreamListener<'a, ListenerT>
 }
 
 pub struct StreamListenerBuilder<'a, T>
-    where for<'x> T: ListenerAdapter<'x>,
+where
+    for<'x> T: ListenerAdapter<'x>,
 {
     listener: Option<T>,
     logger: Option<Logger>,
-    handler: Option<Arc<dyn StreamHandler<<T as ListenerAdapter<'a>>::StreamT>>>
+    handler: Option<Arc<dyn StreamHandler<<T as ListenerAdapter<'a>>::StreamT>>>,
 }
 
 impl<'a, T> Default for StreamListenerBuilder<'a, T>
-    where for<'x> T: ListenerAdapter<'x>
+where
+    for<'x> T: ListenerAdapter<'x>,
 {
     fn default() -> Self {
         StreamListenerBuilder {
             listener: None,
             logger: None,
-            handler: None
+            handler: None,
         }
     }
 }
 
 impl<'a, T> StreamListenerBuilder<'a, T>
-    where for<'x> T: ListenerAdapter<'x>,
+where
+    for<'x> T: ListenerAdapter<'x>,
 {
     pub fn listener(self, new_listener: T) -> Self {
         Self {
@@ -133,8 +134,10 @@ impl<'a, T> StreamListenerBuilder<'a, T>
         }
     }
 
-    pub fn stream_handler(self, handler: Arc<dyn StreamHandler<<T as ListenerAdapter<'a>>::StreamT>>) -> Self
-    {
+    pub fn stream_handler(
+        self,
+        handler: Arc<dyn StreamHandler<<T as ListenerAdapter<'a>>::StreamT>>,
+    ) -> Self {
         Self {
             handler: Some(handler),
             ..self
@@ -150,13 +153,14 @@ impl<'a, T> StreamListenerBuilder<'a, T>
                 .listener
                 .expect("Did not provide a listener type for StreamListenerBuilder"),
             stop_requested: AtomicBool::new(false),
-            stream_handler: self.handler
+            stream_handler: self.handler,
         }
     }
 }
 
 impl<'a, ListenerT> StreamListener<'a, ListenerT>
-    where for<'x> ListenerT: ListenerAdapter<'x>
+where
+    for<'x> ListenerT: ListenerAdapter<'x>,
 {
     pub fn new() -> StreamListenerBuilder<'a, ListenerT> {
         StreamListenerBuilder::<ListenerT>::default()
@@ -164,7 +168,8 @@ impl<'a, ListenerT> StreamListener<'a, ListenerT>
 }
 
 impl<'a, ListenerT> StreamListenerExt<'a, ListenerT> for StreamListener<'a, ListenerT>
-    where for<'x> ListenerT: ListenerAdapter<'x>,
+where
+    for<'x> ListenerT: ListenerAdapter<'x>,
 {
     fn request_stop(&mut self) {
         self.stop_requested.store(false, Ordering::Relaxed)
@@ -181,7 +186,6 @@ impl<'a, ListenerT> StreamListenerExt<'a, ListenerT> for StreamListener<'a, List
         // spawned into a scope are guaranteed to be destroyed
         // before the function returns
         std::thread::scope(|scope| -> UResult {
-
             // New container for all worker threads
             let mut workers: Vec<ScopedJoinHandle<UResult>> = Vec::new();
 

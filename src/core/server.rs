@@ -6,7 +6,7 @@ use std::net::{TcpListener, TcpStream};
 
 struct UpdateServer<'a> {
     listener: StreamListener<'a, TcpListener>,
-    dispatcher: UpdateDispatcher
+    dispatcher: UpdateDispatcher,
 }
 
 #[derive(Default)]
@@ -25,7 +25,7 @@ impl<'a> UpdateServer<'a> {
                 .listener(TcpListener::bind(addr)?)
                 .logger(logger)
                 .build(),
-            dispatcher: UpdateDispatcher::new(DefaultUpdateHandler::default())
+            dispatcher: UpdateDispatcher::new(DefaultUpdateHandler::default()),
         })
     }
 }

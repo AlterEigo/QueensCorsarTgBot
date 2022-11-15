@@ -16,10 +16,11 @@ pub struct CommandDispatcher {
 
 impl UpdateDispatcher {
     pub fn new<T>(handler: T) -> Self
-        where for<'a> T: 'a + UpdateHandler
+    where
+        for<'a> T: 'a + UpdateHandler,
     {
         Self {
-            handler: Box::new(handler)
+            handler: Box::new(handler),
         }
     }
 }

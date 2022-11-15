@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 mod config;
 mod core;
 mod logger;
