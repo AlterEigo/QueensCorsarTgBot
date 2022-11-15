@@ -18,6 +18,7 @@ use crate::prelude::*;
 pub mod application;
 pub struct UpdateContext;
 
+mod server;
 mod handler;
 mod sender;
 mod common;
