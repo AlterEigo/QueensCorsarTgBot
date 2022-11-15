@@ -26,8 +26,11 @@ impl UpdateDispatcher {
 }
 
 impl Dispatcher<Update> for UpdateDispatcher {
-    fn dispatch(&self, _data: Update) -> UResult {
-        todo!()
+    fn dispatch(&self, data: Update) -> UResult {
+        if let Some(msg) = data.message {
+            self.handler.message(msg)?;
+        }
+        Ok(())
     }
 }
 
