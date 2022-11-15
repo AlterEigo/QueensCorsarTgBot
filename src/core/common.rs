@@ -117,24 +117,28 @@ impl<T> StreamListenerBuilder<T>
 where
     for<'a> T: 'a + ListenerAdapter<'a>,
 {
-    fn listener(self, new_listener: T) -> Self {
+    pub fn listener(self, new_listener: T) -> Self {
         Self {
             listener: Some(new_listener),
             ..self
         }
     }
 
-    fn logger(self, new_logger: Logger) -> Self {
+    pub fn logger(self, new_logger: Logger) -> Self {
         Self {
             logger: Some(new_logger),
             ..self
         }
     }
 
-    fn build(self) -> StreamListener<T> {
+    pub fn build(self) -> StreamListener<T> {
         StreamListener::<T> {
-            logger: self.logger.expect("Did not provide a logger for StreamListenerBuilder"),
-            listener: self.listener.expect("Did not provide a listener type for StreamListenerBuilder"),
+            logger: self
+                .logger
+                .expect("Did not provide a logger for StreamListenerBuilder"),
+            listener: self
+                .listener
+                .expect("Did not provide a listener type for StreamListenerBuilder"),
             stop_requested: AtomicBool::new(false),
         }
     }
@@ -154,7 +158,7 @@ impl<ListenerT> StreamListener<ListenerT>
 where
     for<'a> ListenerT: 'a + ListenerAdapter<'a>,
 {
-    fn new() -> StreamListenerBuilder<ListenerT> {
+    pub fn new() -> StreamListenerBuilder<ListenerT> {
         StreamListenerBuilder::<ListenerT>::default()
     }
 }
