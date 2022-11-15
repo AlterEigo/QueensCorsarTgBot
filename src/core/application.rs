@@ -55,32 +55,33 @@ async fn instantiate_tgbot(ctx: &BootstrapRequirements) -> UResult<bot::BotApi> 
     }
 }
 
-async fn instantiate_update_listener(ctx: &BootstrapRequirements) -> UResult<UpdateProvider> {
-    let tls_config = create_server_config(&ctx.config);
-    if let Err(why) = tls_config {
-        crit!(ctx.logger, "Could not instantiate a valid TLS config"; "reason" => why.to_string());
-        return Err(why.into());
-    }
-    let tls_config = tls_config.unwrap();
-    info!(ctx.logger, "TLS config successfully initialized");
+// async fn instantiate_update_listener(ctx: &BootstrapRequirements) -> UResult<UpdateProvider> {
+    // let tls_config = create_server_config(&ctx.config);
+    // if let Err(why) = tls_config {
+        // crit!(ctx.logger, "Could not instantiate a valid TLS config"; "reason" => why.to_string());
+        // return Err(why.into());
+    // }
+    // let tls_config = tls_config.unwrap();
+    // info!(ctx.logger, "TLS config successfully initialized");
 
-    let server = TcpListener::bind(format!(
-        "{}:{}",
-        &ctx.config.server_ip, &ctx.config.server_port
-    ))?;
-    info!(
-        ctx.logger,
-        "Starting server at {}:{}", &ctx.config.server_ip, &ctx.config.server_port
-    );
+    // let server = TcpListener::bind(format!(
+        // "{}:{}",
+        // &ctx.config.server_ip, &ctx.config.server_port
+    // ))?;
+    // info!(
+        // ctx.logger,
+        // "Starting server at {}:{}", &ctx.config.server_ip, &ctx.config.server_port
+    // );
 
-    let up = UpdateProvider::new()
-        .logger(ctx.logger.clone())
-        .listener(server)
-        .tls_config(tls_config)
-        .build()?;
-    info!(ctx.logger, "Server thread engaged");
-    Ok(up)
-}
+    // let up = UpdateProvider::new()
+        // .logger(ctx.logger.clone())
+        // .listener(server)
+        // .tls_config(tls_config)
+        // .build()?;
+    // info!(ctx.logger, "Server thread engaged");
+    // Ok(up)
+    // todo!()
+// }
 
 async fn show_webhook_infos(ctx: &BootstrapRequirements, bot: &bot::BotApi) -> UResult {
     let infos = bot.get_webhook_info().await;
@@ -97,22 +98,24 @@ async fn show_webhook_infos(ctx: &BootstrapRequirements, bot: &bot::BotApi) -> U
 }
 
 pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
-    introduce_self(&ctx);
+    // introduce_self(&ctx);
 
-    let bot_fut = instantiate_tgbot(&ctx);
-    let listener_fut = instantiate_update_listener(&ctx);
+    // let bot_fut = instantiate_tgbot(&ctx);
+    // let listener_fut = instantiate_update_listener(&ctx);
 
-    {
-        let bot = bot_fut.await?;
-        show_webhook_infos(&ctx, &bot).await?;
-    }
+    // {
+        // let bot = bot_fut.await?;
+        // show_webhook_infos(&ctx, &bot).await?;
+    // }
 
-    {
-        let server_thread = listener_fut.await?;
-        if let Err(err) = server_thread.listen().await {
-            crit!(ctx.logger, "Critical error while running the server"; "reason" => err.to_string());
-        }
-    }
+    // {
+        // let server_thread = listener_fut.await?;
+        // if let Err(err) = server_thread.listen().await {
+            // crit!(ctx.logger, "Critical error while running the server"; "reason" => err.to_string());
+        // }
+    // }
 
-    Ok(())
+    // Ok(())
+
+    todo!()
 }
