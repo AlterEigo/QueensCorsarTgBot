@@ -24,6 +24,7 @@ pub trait LoggingEntity {
 pub trait StreamHandler<T>
 where
     T: io::Read + io::Write,
+    Self: Send + Sync
 {
     fn handle_stream(&self, stream: T) -> UResult;
 }
@@ -31,7 +32,7 @@ where
 pub trait ListenerAdapter<'a>: Send + Sync {
     type StreamT: io::Read + io::Write + Send + Sync;
     type SockAddrT;
-    type IncomingT: 'a + Iterator<Item = io::Result<Self::StreamT>>;
+    type IncomingT: Iterator<Item = io::Result<Self::StreamT>>;
 
     fn accept(&'a self) -> UResult<(Self::StreamT, Self::SockAddrT)>;
 
@@ -43,14 +44,16 @@ impl<'a> ListenerAdapter<'a> for net::TcpListener {
     type SockAddrT = net::SocketAddr;
     type IncomingT = net::Incoming<'a>;
 
-    fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)> {
+    fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)>
+    {
         match self.accept() {
             Ok((stream, addr)) => Ok((stream, addr)),
             Err(why) => Err(why.into()),
         }
     }
 
-    fn incoming(&'a self) -> Self::IncomingT {
+    fn incoming(&'a self) -> Self::IncomingT
+    {
         self.incoming()
     }
 }
@@ -60,62 +63,61 @@ impl<'a> ListenerAdapter<'a> for uxnet::UnixListener {
     type SockAddrT = uxnet::SocketAddr;
     type IncomingT = uxnet::Incoming<'a>;
 
-    fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)> {
+    fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)>
+    {
         match self.accept() {
             Ok((stream, addr)) => Ok((stream, addr)),
             Err(why) => Err(why.into()),
         }
     }
 
-    fn incoming(&'a self) -> Self::IncomingT {
+    fn incoming(&'a self) -> Self::IncomingT
+    {
         self.incoming()
     }
 }
 
-pub trait StreamListenerExt<ListenerT>
-where
-    for<'a> ListenerT: 'a + ListenerAdapter<'a>,
+pub trait StreamListenerExt<'a, ListenerT>
+    where for<'x> ListenerT: ListenerAdapter<'x>,
 {
-    fn request_stop(&mut self);
+    fn request_stop(&'a mut self);
 
-    fn is_stopped(&self) -> bool;
+    fn is_stopped(&'a self) -> bool;
 
-    fn listen(&self) -> UResult;
+    fn listen(&'a self) -> UResult;
 }
 
-pub struct StreamListener<ListenerT>
-where
-    for<'a> ListenerT: 'a + ListenerAdapter<'a>,
+pub struct StreamListener<'a, ListenerT>
+    where for<'x> ListenerT: ListenerAdapter<'x>,
 {
     logger: Logger,
     listener: ListenerT,
+    stream_handler: Option<Arc<dyn StreamHandler<<ListenerT as ListenerAdapter<'a>>::StreamT>>>,
     stop_requested: AtomicBool,
 }
 
-#[derive(Debug)]
-pub struct StreamListenerBuilder<T>
-where
-    for<'a> T: 'a + ListenerAdapter<'a>,
+pub struct StreamListenerBuilder<'a, T>
+    where for<'x> T: ListenerAdapter<'x>,
 {
     listener: Option<T>,
     logger: Option<Logger>,
+    handler: Option<Arc<dyn StreamHandler<<T as ListenerAdapter<'a>>::StreamT>>>
 }
 
-impl<T> Default for StreamListenerBuilder<T>
-where
-    for<'a> T: 'a + ListenerAdapter<'a>,
+impl<'a, T> Default for StreamListenerBuilder<'a, T>
+    where for<'x> T: ListenerAdapter<'x>
 {
     fn default() -> Self {
         StreamListenerBuilder {
             listener: None,
             logger: None,
+            handler: None
         }
     }
 }
 
-impl<T> StreamListenerBuilder<T>
-where
-    for<'a> T: 'a + ListenerAdapter<'a>,
+impl<'a, T> StreamListenerBuilder<'a, T>
+    where for<'x> T: ListenerAdapter<'x>,
 {
     pub fn listener(self, new_listener: T) -> Self {
         Self {
@@ -131,8 +133,16 @@ where
         }
     }
 
-    pub fn build(self) -> StreamListener<T> {
-        StreamListener::<T> {
+    pub fn stream_handler(self, handler: Arc<dyn StreamHandler<<T as ListenerAdapter<'a>>::StreamT>>) -> Self
+    {
+        Self {
+            handler: Some(handler),
+            ..self
+        }
+    }
+
+    pub fn build(self) -> StreamListener<'a, T> {
+        StreamListener {
             logger: self
                 .logger
                 .expect("Did not provide a logger for StreamListenerBuilder"),
@@ -140,32 +150,21 @@ where
                 .listener
                 .expect("Did not provide a listener type for StreamListenerBuilder"),
             stop_requested: AtomicBool::new(false),
+            stream_handler: self.handler
         }
     }
 }
 
-impl<ListenerT, StreamT> StreamHandler<StreamT> for StreamListener<ListenerT>
-where
-    for<'a> ListenerT: 'a + ListenerAdapter<'a>,
-    StreamT: io::Read + io::Write,
+impl<'a, ListenerT> StreamListener<'a, ListenerT>
+    where for<'x> ListenerT: ListenerAdapter<'x>
 {
-    fn handle_stream(&self, stream: StreamT) -> UResult {
-        todo!()
-    }
-}
-
-impl<ListenerT> StreamListener<ListenerT>
-where
-    for<'a> ListenerT: 'a + ListenerAdapter<'a>,
-{
-    pub fn new() -> StreamListenerBuilder<ListenerT> {
+    pub fn new() -> StreamListenerBuilder<'a, ListenerT> {
         StreamListenerBuilder::<ListenerT>::default()
     }
 }
 
-impl<ListenerT> StreamListenerExt<ListenerT> for StreamListener<ListenerT>
-where
-    for<'a> ListenerT: 'a + ListenerAdapter<'a>,
+impl<'a, ListenerT> StreamListenerExt<'a, ListenerT> for StreamListener<'a, ListenerT>
+    where for<'x> ListenerT: ListenerAdapter<'x>,
 {
     fn request_stop(&mut self) {
         self.stop_requested.store(false, Ordering::Relaxed)
@@ -175,11 +174,24 @@ where
         self.stop_requested.load(Ordering::Relaxed)
     }
 
-    fn listen(&self) -> UResult {
+    /// Engage the the loop for processing new connections in the
+    /// current thread
+    fn listen(&'a self) -> UResult {
+        // A scope for each new spawned thread. All threads
+        // spawned into a scope are guaranteed to be destroyed
+        // before the function returns
         std::thread::scope(|scope| -> UResult {
+
+            // New container for all worker threads
             let mut workers: Vec<ScopedJoinHandle<UResult>> = Vec::new();
+
+            // Iterating through the connection queue and
+            // spawning a new handler thread for each new
+            // connection
             for stream in self.listener.incoming() {
                 debug!(self.logger, "Handling incoming request");
+
+                // Handling connection errors before processing
                 if let Err(err) = stream {
                     match err.kind() {
                         io::ErrorKind::WouldBlock => continue,
@@ -190,18 +202,30 @@ where
                     };
                 }
                 let stream = stream.unwrap();
-                let worker = scope.spawn(|| {
-                    if let Err(why) = self.handle_stream(stream) {
-                        error!(self.logger, "TCP stream handling error"; "error" => format!("{:#?}", why));
-                    }
-                    Ok(())
-                });
-                workers.push(worker);
 
+                // If a connection handler is available, we spawn
+                // a new thread and delegating the connection processing
+                // to this external stream handler
+                if let Some(ref handler) = self.stream_handler {
+                    let logger = self.logger.clone();
+                    let handler = handler.clone();
+                    let worker = scope.spawn(move || {
+                        if let Err(why) = handler.handle_stream(stream) {
+                            error!(logger, "TCP stream handling error"; "error" => format!("{:#?}", why));
+                        }
+                        Ok(())
+                    });
+                    workers.push(worker);
+                }
+
+                // Checking if the client requested server stop
                 if self.is_stopped() {
                     break;
                 }
             }
+
+            // Joining all threads manually and handling
+            // errors before qutting the scope
             for w in workers {
                 if let Err(why) = w.join() {
                     error!(self.logger, "Error while joining the worker thread"; "reason" => format!("{:#?}", why));
