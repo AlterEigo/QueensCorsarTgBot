@@ -30,6 +30,12 @@ impl<'a> UpdateServer<'a> {
     }
 }
 
+impl<'a> StreamHandler<TcpStream> for UpdateServer<'a> {
+    fn handle_stream(&self, stream: TcpStream) -> UResult {
+        todo!()
+    }
+}
+
 impl<'a> StreamListenerExt<'a, TcpListener> for UpdateServer<'a> {
     fn listen(&'a self) -> UResult {
         self.listener.listen()

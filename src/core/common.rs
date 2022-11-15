@@ -30,6 +30,7 @@ where
 }
 
 pub type StreamHandlerArc<'a, ListenerT> = Arc<dyn StreamHandler<<ListenerT as ListenerAdapter<'a>>::StreamT>>;
+pub type StreamHandlerRef<'a, ListenerT> = &'a dyn StreamHandler<<ListenerT as ListenerAdapter<'a>>::StreamT>;
 
 pub trait ListenerAdapter<'a>: Send + Sync {
     type StreamT: io::Read + io::Write + Send + Sync;
@@ -78,6 +79,7 @@ impl<'a> ListenerAdapter<'a> for uxnet::UnixListener {
 pub trait StreamListenerExt<'a, ListenerT>
 where
     for<'x> ListenerT: ListenerAdapter<'x>,
+    Self: Send + Sync
 {
     fn request_stop(&'a mut self);
 
@@ -92,7 +94,7 @@ where
 {
     logger: Logger,
     listener: ListenerT,
-    stream_handler: Option<StreamHandlerArc<'a, ListenerT>>,
+    stream_handler: Option<StreamHandlerRef<'a, ListenerT>>,
     stop_requested: AtomicBool,
 }
 
@@ -102,7 +104,7 @@ where
 {
     listener: Option<T>,
     logger: Option<Logger>,
-    handler: Option<StreamHandlerArc<'a, T>>,
+    handler: Option<StreamHandlerRef<'a, T>>,
 }
 
 impl<'a, T> Default for StreamListenerBuilder<'a, T>
@@ -138,7 +140,7 @@ where
 
     pub fn stream_handler(
         self,
-        handler: StreamHandlerArc<'a, T>
+        handler: StreamHandlerRef<'a, T>
     ) -> Self {
         Self {
             handler: Some(handler),
