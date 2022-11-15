@@ -19,13 +19,11 @@ pub mod application;
 pub struct UpdateContext;
 
 mod handler;
-mod provider;
 mod sender;
 mod common;
 mod dispatcher;
 
 pub use handler::*;
-pub use provider::*;
 pub use sender::*;
 
 pub trait UpdateHandler: Send + Sync {
