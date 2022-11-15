@@ -72,7 +72,10 @@ impl<'a> ListenerAdapter<'a> for uxnet::UnixListener {
     }
 }
 
-trait StreamListenerExt<ListenerT> {
+pub trait StreamListenerExt<ListenerT>
+where
+    for<'a> ListenerT: 'a + ListenerAdapter<'a>,
+{
     fn request_stop(&mut self);
 
     fn is_stopped(&self) -> bool;
@@ -89,6 +92,54 @@ where
     stop_requested: AtomicBool,
 }
 
+#[derive(Debug)]
+pub struct StreamListenerBuilder<T>
+where
+    for<'a> T: 'a + ListenerAdapter<'a>,
+{
+    listener: Option<T>,
+    logger: Option<Logger>,
+}
+
+impl<T> Default for StreamListenerBuilder<T>
+where
+    for<'a> T: 'a + ListenerAdapter<'a>,
+{
+    fn default() -> Self {
+        StreamListenerBuilder {
+            listener: None,
+            logger: None,
+        }
+    }
+}
+
+impl<T> StreamListenerBuilder<T>
+where
+    for<'a> T: 'a + ListenerAdapter<'a>,
+{
+    fn listener(self, new_listener: T) -> Self {
+        Self {
+            listener: Some(new_listener),
+            ..self
+        }
+    }
+
+    fn logger(self, new_logger: Logger) -> Self {
+        Self {
+            logger: Some(new_logger),
+            ..self
+        }
+    }
+
+    fn build(self) -> StreamListener<T> {
+        StreamListener::<T> {
+            logger: self.logger.expect("Did not provide a logger for StreamListenerBuilder"),
+            listener: self.listener.expect("Did not provide a listener type for StreamListenerBuilder"),
+            stop_requested: AtomicBool::new(false),
+        }
+    }
+}
+
 impl<ListenerT, StreamT> StreamHandler<StreamT> for StreamListener<ListenerT>
 where
     for<'a> ListenerT: 'a + ListenerAdapter<'a>,
@@ -96,6 +147,15 @@ where
 {
     fn handle_stream(&self, stream: StreamT) -> UResult {
         todo!()
+    }
+}
+
+impl<ListenerT> StreamListener<ListenerT>
+where
+    for<'a> ListenerT: 'a + ListenerAdapter<'a>,
+{
+    fn new() -> StreamListenerBuilder<ListenerT> {
+        StreamListenerBuilder::<ListenerT>::default()
     }
 }
 
