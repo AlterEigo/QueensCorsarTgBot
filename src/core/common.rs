@@ -169,6 +169,11 @@ where
     pub fn new() -> StreamListenerBuilder<'a, ListenerT> {
         StreamListenerBuilder::<ListenerT>::default()
     }
+
+    pub fn set_handler<'b>(&'b mut self, handler: StreamHandlerRef<'a, ListenerT>) -> &'b mut Self {
+        std::mem::replace(&mut self.stream_handler, Some(handler));
+        self
+    }
 }
 
 impl<'a, ListenerT> StreamListenerExt<'a, ListenerT> for StreamListener<'a, ListenerT>
