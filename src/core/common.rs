@@ -72,6 +72,14 @@ impl<'a> ListenerAdapter<'a> for uxnet::UnixListener {
     }
 }
 
+trait StreamListenerExt<ListenerT> {
+    fn request_stop(&mut self);
+
+    fn is_stopped(&self) -> bool;
+
+    fn listen(&self) -> UResult;
+}
+
 pub struct StreamListener<ListenerT>
 where
     for<'a> ListenerT: 'a + ListenerAdapter<'a>,
@@ -91,19 +99,19 @@ where
     }
 }
 
-impl<ListenerT> StreamListener<ListenerT>
+impl<ListenerT> StreamListenerExt<ListenerT> for StreamListener<ListenerT>
 where
     for<'a> ListenerT: 'a + ListenerAdapter<'a>,
 {
-    pub fn request_stop(&mut self) {
+    fn request_stop(&mut self) {
         self.stop_requested.store(false, Ordering::Relaxed)
     }
 
-    pub fn is_stopped(&self) -> bool {
+    fn is_stopped(&self) -> bool {
         self.stop_requested.load(Ordering::Relaxed)
     }
 
-    pub fn listen(&self) -> UResult {
+    fn listen(&self) -> UResult {
         std::thread::scope(|scope| -> UResult {
             let mut workers: Vec<ScopedJoinHandle<UResult>> = Vec::new();
             for stream in self.listener.incoming() {
