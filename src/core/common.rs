@@ -29,6 +29,8 @@ where
     fn handle_stream(&self, stream: T) -> UResult;
 }
 
+pub type StreamHandlerArc<'a, ListenerT> = Arc<dyn StreamHandler<<ListenerT as ListenerAdapter<'a>>::StreamT>>;
+
 pub trait ListenerAdapter<'a>: Send + Sync {
     type StreamT: io::Read + io::Write + Send + Sync;
     type SockAddrT;
@@ -90,7 +92,7 @@ where
 {
     logger: Logger,
     listener: ListenerT,
-    stream_handler: Option<Arc<dyn StreamHandler<<ListenerT as ListenerAdapter<'a>>::StreamT>>>,
+    stream_handler: Option<StreamHandlerArc<'a, ListenerT>>,
     stop_requested: AtomicBool,
 }
 
@@ -100,7 +102,7 @@ where
 {
     listener: Option<T>,
     logger: Option<Logger>,
-    handler: Option<Arc<dyn StreamHandler<<T as ListenerAdapter<'a>>::StreamT>>>,
+    handler: Option<StreamHandlerArc<'a, T>>,
 }
 
 impl<'a, T> Default for StreamListenerBuilder<'a, T>
@@ -136,7 +138,7 @@ where
 
     pub fn stream_handler(
         self,
-        handler: Arc<dyn StreamHandler<<T as ListenerAdapter<'a>>::StreamT>>,
+        handler: StreamHandlerArc<'a, T>
     ) -> Self {
         Self {
             handler: Some(handler),
