@@ -26,6 +26,9 @@ mod server;
 
 pub use handler::*;
 pub use sender::*;
+pub use common::*;
+pub use server::*;
+pub use dispatcher::*;
 
 pub trait UpdateHandler: Send + Sync {
     fn message(&self, context: &UpdateContext, message: Message) {}
