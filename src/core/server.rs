@@ -168,7 +168,7 @@ impl<'a> StreamListenerExt<'a, TcpListener> for UpdateServer<'a> {
         self.stream_listener.listen()
     }
 
-    fn request_stop(&'a mut self) {
+    fn request_stop(&'a self) {
         self.stream_listener.request_stop()
     }
 

@@ -83,7 +83,7 @@ where
     for<'x> ListenerT: ListenerAdapter<'x>,
     Self: Send + Sync,
 {
-    fn request_stop(&'a mut self);
+    fn request_stop(&'a self);
 
     fn is_stopped(&'a self) -> bool;
 
@@ -179,7 +179,7 @@ impl<'a, ListenerT> StreamListenerExt<'a, ListenerT> for StreamListener<'a, List
 where
     for<'x> ListenerT: ListenerAdapter<'x>,
 {
-    fn request_stop(&mut self) {
+    fn request_stop(&self) {
         self.stop_requested.store(false, Ordering::Relaxed)
     }
 
