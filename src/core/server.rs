@@ -73,8 +73,10 @@ impl UpdateServerBuilder {
         }
     }
 
-    pub fn stream_listener<ListenerT>(self, listener: Arc<dyn StreamListenerExt<TcpListener>>) -> Self
-    {
+    pub fn stream_listener<ListenerT>(
+        self,
+        listener: Arc<dyn StreamListenerExt<TcpListener>>,
+    ) -> Self {
         assert!(
             self.bind_addr.is_none(),
             "You must either provide an address OR a listener"
