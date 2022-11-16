@@ -41,6 +41,10 @@ impl UpdateServerBuilder {
     }
 
     pub fn stream_handler(self, handler: Arc<dyn StreamHandler<TcpStream>>) -> Self {
+        assert!(
+            self.stream_listener.is_none(),
+            "Custom stream handler won't be used if a custom listener is provided"
+        );
         Self {
             stream_handler: Some(handler),
             ..self
@@ -66,23 +70,24 @@ impl UpdateServerBuilder {
     }
 
     pub fn build(self) -> UResult<UpdateServer> {
-        assert!(
+        let flags = (
             self.logger.is_some(),
-            "Did not provide a logger for the update server"
+            self.bind_addr.is_some(),
+            self.stream_listener.is_some(),
+            self.stream_handler.is_some()
         );
-        assert!(
-            self.bind_addr.is_some() || self.stream_listener.is_some(),
-            "Did not provide a listener or an interface to listen to for the update server"
-        );
-        assert!(
-            self.stream_handler.is_some(),
-            "Did not provide a configured stream handler for the update server"
-        );
+        match flags {
+            (false, _, _, _) => panic!("Did not provide a logger for the update server"),
+            (_, true, true, _) | (_, false, false, _) => panic!("You have to provide either an address to bind to, or a configured listener"),
+            (_, _, true, true) => panic!("A custom stream handler won't be used if you also provide a listener"),
+            _ => ()
+        };
 
         let stream_handler = self.stream_handler.unwrap();
         let stream_listener = self.stream_listener.unwrap_or(Arc::new(
             StreamListener::<TcpListener>::new()
                 .listener(TcpListener::bind(self.bind_addr.unwrap())?)
+                .stream_handler(stream_handler)
                 .logger(self.logger.unwrap())
                 .build(),
         ));
