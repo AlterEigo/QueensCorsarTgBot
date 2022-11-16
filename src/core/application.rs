@@ -1,6 +1,7 @@
 use crate::config;
 use crate::prelude::*;
 use std::net::TcpListener;
+use std::sync::Arc;
 use telegram_bot_api::bot;
 
 #[derive(Clone)]
@@ -98,22 +99,32 @@ async fn show_webhook_infos(ctx: &BootstrapRequirements, bot: &bot::BotApi) -> U
 }
 
 pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
-    // introduce_self(&ctx);
+    introduce_self(&ctx);
 
-    // let bot_fut = instantiate_tgbot(&ctx);
+    let bot_fut = instantiate_tgbot(&ctx);
     // let listener_fut = instantiate_update_listener(&ctx);
 
-    // {
-    // let bot = bot_fut.await?;
-    // show_webhook_infos(&ctx, &bot).await?;
-    // }
+    let update_handler = Arc::new(DefaultUpdateHandler::default());
+    let update_dispatcher = Arc::new(DefaultUpdateDispatcher::new(update_handler));
+    let stream_handler = Arc::new(DefaultStreamHandler::new(update_dispatcher));
+    let stream_listener = Arc::new(
+        StreamListener::<TcpListener>::new()
+            .logger(ctx.logger.clone())
+            .stream_handler(stream_handler)
+            .build(),
+    );
+    let update_server = UpdateServer::new().logger(ctx.logger.clone()).build()?;
 
-    // {
-    // let server_thread = listener_fut.await?;
-    // if let Err(err) = server_thread.listen().await {
-    // crit!(ctx.logger, "Critical error while running the server"; "reason" => err.to_string());
-    // }
-    // }
+    {
+        let bot = bot_fut.await?;
+        show_webhook_infos(&ctx, &bot).await?;
+    }
+
+    {
+        if let Err(err) = update_server.listen() {
+            crit!(ctx.logger, "Critical error while running the server"; "reason" => err.to_string());
+        }
+    }
 
     // Ok(())
 
