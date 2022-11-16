@@ -38,18 +38,15 @@ pub trait ListenerAdapter: Send + Sync {
     type StreamT: io::Read + io::Write + Send + Sync;
     type SockAddrT;
 
-    fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)>;
+    fn accept(&self) -> io::Result<(Self::StreamT, Self::SockAddrT)>;
 }
 
 impl ListenerAdapter for net::TcpListener {
     type StreamT = net::TcpStream;
     type SockAddrT = net::SocketAddr;
 
-    fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)> {
-        match self.accept() {
-            Ok((stream, addr)) => Ok((stream, addr)),
-            Err(why) => Err(why.into()),
-        }
+    fn accept(&self) -> io::Result<(Self::StreamT, Self::SockAddrT)> {
+        self.accept()
     }
 }
 
@@ -57,11 +54,8 @@ impl ListenerAdapter for uxnet::UnixListener {
     type StreamT = uxnet::UnixStream;
     type SockAddrT = uxnet::SocketAddr;
 
-    fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)> {
-        match self.accept() {
-            Ok((stream, addr)) => Ok((stream, addr)),
-            Err(why) => Err(why.into()),
-        }
+    fn accept(&self) -> io::Result<(Self::StreamT, Self::SockAddrT)> {
+        self.accept()
     }
 }
 
@@ -187,11 +181,13 @@ where
             // Iterating through the connection queue and
             // spawning a new handler thread for each new
             // connection
-            for stream in self.listener.incoming() {
+            loop {
+                let result = self.listener.accept();
+                // let (stream, _) = self.listener.accept()?;
                 debug!(self.logger, "Handling incoming request");
 
                 // Handling connection errors before processing
-                if let Err(err) = stream {
+                if let Err(err) = result {
                     match err.kind() {
                         io::ErrorKind::WouldBlock => continue,
                         _ => {
@@ -200,7 +196,7 @@ where
                         }
                     };
                 }
-                let stream = stream.unwrap();
+                let (stream, _) = result.unwrap();
 
                 // If a connection handler is available, we spawn
                 // a new thread and delegating the connection processing
