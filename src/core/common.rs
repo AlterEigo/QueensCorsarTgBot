@@ -39,7 +39,7 @@ pub trait ListenerAdapter<'a>: Send + Sync {
     type SockAddrT;
     type IncomingT: Iterator<Item = io::Result<Self::StreamT>>;
 
-    fn accept(&'a self) -> UResult<(Self::StreamT, Self::SockAddrT)>;
+    fn accept(&self) -> UResult<(Self::StreamT, Self::SockAddrT)>;
 
     fn incoming(&'a self) -> Self::IncomingT;
 }
