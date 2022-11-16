@@ -73,9 +73,7 @@ impl<'a> UpdateServerBuilder<'a> {
         }
     }
 
-    pub fn stream_listener<ListenerT>(self, listener: Arc<ListenerT>) -> Self
-    where
-        for<'x> ListenerT: StreamListenerExt<'x, TcpListener>,
+    pub fn stream_listener<ListenerT>(self, listener: Arc<dyn StreamListenerExt<'a, TcpListener>>) -> Self
     {
         assert!(
             self.bind_addr.is_none(),
@@ -130,14 +128,14 @@ impl<'a> UpdateServerBuilder<'a> {
 }
 
 #[derive(Default)]
-struct DefaultUpdateHandler;
+pub struct DefaultUpdateHandler;
 impl UpdateHandler for DefaultUpdateHandler {
     fn message(&self, _msg: telegram_bot_api::types::Message) -> UResult {
         Ok(())
     }
 }
 
-struct DefaultStreamHandler {
+pub struct DefaultStreamHandler {
     dispatcher: Arc<dyn Dispatcher<Update>>,
 }
 
@@ -154,18 +152,8 @@ impl StreamHandler<TcpStream> for DefaultStreamHandler {
 }
 
 impl<'a> UpdateServer<'a> {
-    fn new(addr: &str, logger: Logger) -> UResult<Self> {
-        let update_handler = Arc::new(DefaultUpdateHandler::default());
-        let update_dispatcher = Arc::new(DefaultUpdateDispatcher::new(update_handler));
-        let stream_handler = Arc::new(DefaultStreamHandler::new(update_dispatcher));
-        let stream_listener = Arc::new(
-            StreamListener::new()
-                .listener(TcpListener::bind(addr)?)
-                .logger(logger)
-                .stream_handler(stream_handler)
-                .build(),
-        );
-        Ok(Self { stream_listener })
+    pub fn new() -> UpdateServerBuilder<'a> {
+        Default::default()
     }
 }
 
@@ -177,14 +165,14 @@ impl<'a> StreamHandler<TcpStream> for UpdateServer<'a> {
 
 impl<'a> StreamListenerExt<'a, TcpListener> for UpdateServer<'a> {
     fn listen(&'a self) -> UResult {
-        self.listener.listen()
+        self.stream_listener.listen()
     }
 
     fn request_stop(&'a mut self) {
-        self.listener.request_stop()
+        self.stream_listener.request_stop()
     }
 
     fn is_stopped(&'a self) -> bool {
-        self.listener.is_stopped()
+        self.stream_listener.is_stopped()
     }
 }
