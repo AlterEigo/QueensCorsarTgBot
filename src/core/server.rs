@@ -1,3 +1,4 @@
+use rustls::ServerConfig;
 use slog::Logger;
 use telegram_bot_api::types::Update;
 
@@ -13,8 +14,6 @@ pub struct UpdateServer {
 
 #[derive(Default)]
 pub struct UpdateServerBuilder {
-    update_handler: Option<Arc<dyn UpdateHandler>>,
-    update_dispatcher: Option<Arc<dyn Dispatcher<Update>>>,
     stream_handler: Option<Arc<dyn StreamHandler<TcpStream>>>,
     stream_listener: Option<Arc<dyn StreamListenerExt<TcpListener>>>,
     logger: Option<Logger>,
@@ -40,33 +39,7 @@ impl UpdateServerBuilder {
         }
     }
 
-    pub fn update_handler(self, handler: Arc<dyn UpdateHandler>) -> Self {
-        Self {
-            update_handler: Some(handler),
-            ..self
-        }
-    }
-
-    pub fn update_dispatcher(self, dispatcher: Arc<dyn Dispatcher<Update>>) -> Self {
-        assert!(
-            self.update_handler.is_none(),
-            "A custom update handler won't be used if a custom update dispatcher is provided"
-        );
-        Self {
-            update_dispatcher: Some(dispatcher),
-            ..self
-        }
-    }
-
     pub fn stream_handler(self, handler: Arc<dyn StreamHandler<TcpStream>>) -> Self {
-        assert!(
-            self.update_dispatcher.is_none(),
-            "A custom update dispatcher won't be used if a custom stream handler is provided"
-        );
-        assert!(
-            self.update_handler.is_none(),
-            "A custom update handler won't be used if a custom stream handler is provided"
-        );
         Self {
             stream_handler: Some(handler),
             ..self
@@ -85,14 +58,6 @@ impl UpdateServerBuilder {
             self.stream_handler.is_none(),
             "A custom stream handler won't be used if a custom listener is provided"
         );
-        assert!(
-            self.update_dispatcher.is_none(),
-            "A custom data dispatcher won't be used if a custom listener is provided"
-        );
-        assert!(
-            self.update_handler.is_none(),
-            "A custom update handler won't be used if a custom listener is provided"
-        );
         Self {
             stream_listener: Some(listener),
             ..self
@@ -106,18 +71,14 @@ impl UpdateServerBuilder {
         );
         assert!(
             self.bind_addr.is_some() || self.stream_listener.is_some(),
-            "Did not provide a listener or an interface to listen to"
+            "Did not provide a listener or an interface to listen to for the update server"
+        );
+        assert!(
+            self.stream_handler.is_some(),
+            "Did not provide a configured stream handler for the update server"
         );
 
-        let update_handler = self
-            .update_handler
-            .unwrap_or(Arc::new(DefaultUpdateHandler::default()));
-        let update_dispatcher = self
-            .update_dispatcher
-            .unwrap_or(Arc::new(DefaultUpdateDispatcher::new(update_handler)));
-        let stream_handler = self
-            .stream_handler
-            .unwrap_or(Arc::new(DefaultStreamHandler::new(update_dispatcher)));
+        let stream_handler = self.stream_handler.unwrap();
         let stream_listener = self.stream_listener.unwrap_or(Arc::new(
             StreamListener::<TcpListener>::new()
                 .listener(TcpListener::bind(self.bind_addr.unwrap())?)
@@ -139,11 +100,15 @@ impl UpdateHandler for DefaultUpdateHandler {
 
 pub struct DefaultStreamHandler {
     dispatcher: Arc<dyn Dispatcher<Update>>,
+    tls_config: ServerConfig,
 }
 
 impl DefaultStreamHandler {
-    pub fn new(dispatcher: Arc<dyn Dispatcher<Update>>) -> Self {
-        Self { dispatcher }
+    pub fn new(dispatcher: Arc<dyn Dispatcher<Update>>, tls_config: ServerConfig) -> Self {
+        Self {
+            dispatcher,
+            tls_config,
+        }
     }
 }
 
