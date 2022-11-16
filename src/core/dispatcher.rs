@@ -16,10 +16,7 @@ pub struct DefaultCommandDispatcher {
 }
 
 impl DefaultUpdateDispatcher {
-    pub fn new<T>(handler: Arc<T>) -> Self
-    where
-        T: UpdateHandler,
-    {
+    pub fn new(handler: Arc<dyn UpdateHandler>) -> Self {
         Self {
             handler: handler.clone(),
         }
