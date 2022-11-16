@@ -7,21 +7,21 @@ use std::net::{TcpListener, TcpStream};
 use std::str::FromStr;
 use std::sync::Arc;
 
-pub struct UpdateServer<'a> {
-    stream_listener: Arc<dyn StreamListenerExt<'a, TcpListener>>,
+pub struct UpdateServer {
+    stream_listener: Arc<dyn StreamListenerExt<TcpListener>>,
 }
 
 #[derive(Default)]
-pub struct UpdateServerBuilder<'a> {
+pub struct UpdateServerBuilder {
     update_handler: Option<Arc<dyn UpdateHandler>>,
     update_dispatcher: Option<Arc<dyn Dispatcher<Update>>>,
     stream_handler: Option<Arc<dyn StreamHandler<TcpStream>>>,
-    stream_listener: Option<Arc<dyn StreamListenerExt<'a, TcpListener>>>,
+    stream_listener: Option<Arc<dyn StreamListenerExt<TcpListener>>>,
     logger: Option<Logger>,
     bind_addr: Option<String>,
 }
 
-impl<'a> UpdateServerBuilder<'a> {
+impl UpdateServerBuilder {
     pub fn server_addr(self, addr: &str) -> Self {
         assert!(
             self.stream_listener.is_none(),
@@ -73,7 +73,7 @@ impl<'a> UpdateServerBuilder<'a> {
         }
     }
 
-    pub fn stream_listener<ListenerT>(self, listener: Arc<dyn StreamListenerExt<'a, TcpListener>>) -> Self
+    pub fn stream_listener<ListenerT>(self, listener: Arc<dyn StreamListenerExt<TcpListener>>) -> Self
     {
         assert!(
             self.bind_addr.is_none(),
@@ -97,7 +97,7 @@ impl<'a> UpdateServerBuilder<'a> {
         }
     }
 
-    pub fn build(self) -> UResult<UpdateServer<'a>> {
+    pub fn build(self) -> UResult<UpdateServer> {
         assert!(
             self.logger.is_some(),
             "Did not provide a logger for the update server"
@@ -151,28 +151,28 @@ impl StreamHandler<TcpStream> for DefaultStreamHandler {
     }
 }
 
-impl<'a> UpdateServer<'a> {
-    pub fn new() -> UpdateServerBuilder<'a> {
+impl UpdateServer {
+    pub fn new() -> UpdateServerBuilder {
         Default::default()
     }
 }
 
-impl<'a> StreamHandler<TcpStream> for UpdateServer<'a> {
+impl StreamHandler<TcpStream> for UpdateServer {
     fn handle_stream(&self, stream: TcpStream) -> UResult {
         todo!()
     }
 }
 
-impl<'a> StreamListenerExt<'a, TcpListener> for UpdateServer<'a> {
-    fn listen(&'a self) -> UResult {
+impl StreamListenerExt<TcpListener> for UpdateServer {
+    fn listen(&self) -> UResult {
         self.stream_listener.listen()
     }
 
-    fn request_stop(&'a self) {
+    fn request_stop(&self) {
         self.stream_listener.request_stop()
     }
 
-    fn is_stopped(&'a self) -> bool {
+    fn is_stopped(&self) -> bool {
         self.stream_listener.is_stopped()
     }
 }
