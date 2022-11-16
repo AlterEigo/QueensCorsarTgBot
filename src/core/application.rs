@@ -101,6 +101,7 @@ async fn show_webhook_infos(ctx: &BootstrapRequirements, bot: &bot::BotApi) -> U
 pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
     introduce_self(&ctx);
 
+    let srv_addr = format!("{}:{}", ctx.config.server_ip, ctx.config.server_port);
     let bot_fut = instantiate_tgbot(&ctx);
     // let listener_fut = instantiate_update_listener(&ctx);
 
@@ -109,13 +110,18 @@ pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
     let update_handler = Arc::new(DefaultUpdateHandler::default());
     let update_dispatcher = Arc::new(DefaultUpdateDispatcher::new(update_handler));
     let stream_handler = Arc::new(DefaultStreamHandler::new(update_dispatcher, tls_config));
-    let stream_listener = Arc::new(
-        StreamListener::<TcpListener>::new()
-            .logger(ctx.logger.clone())
-            .stream_handler(stream_handler)
-            .build(),
-    );
-    let update_server = UpdateServer::new().logger(ctx.logger.clone()).build()?;
+    // let stream_listener = Arc::new(
+        // StreamListener::<TcpListener>::new()
+            // .logger(ctx.logger.clone())
+            // .listener(TcpListener::bind(srv_addr)?)
+            // .stream_handler(stream_handler)
+            // .build(),
+    // );
+    let update_server = UpdateServer::new()
+        .logger(ctx.logger.clone())
+        .server_addr(&srv_addr)
+        .stream_handler(stream_handler)
+        .build()?;
 
     {
         let bot = bot_fut.await?;
