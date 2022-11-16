@@ -104,9 +104,11 @@ pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
     let bot_fut = instantiate_tgbot(&ctx);
     // let listener_fut = instantiate_update_listener(&ctx);
 
+    let tls_config = create_server_config(&ctx.config)?;
+
     let update_handler = Arc::new(DefaultUpdateHandler::default());
     let update_dispatcher = Arc::new(DefaultUpdateDispatcher::new(update_handler));
-    let stream_handler = Arc::new(DefaultStreamHandler::new(update_dispatcher));
+    let stream_handler = Arc::new(DefaultStreamHandler::new(update_dispatcher, tls_config));
     let stream_listener = Arc::new(
         StreamListener::<TcpListener>::new()
             .logger(ctx.logger.clone())
