@@ -1,9 +1,10 @@
-use rustls::ServerConfig;
+use rustls::{ServerConfig,ServerConnection};
 use slog::Logger;
 use telegram_bot_api::types::Update;
 
 use crate::prelude::*;
 
+use serde::{Serialize,Deserialize};
 use std::net::{TcpListener, TcpStream};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -113,8 +114,20 @@ impl DefaultStreamHandler {
 }
 
 impl StreamHandler<TcpStream> for DefaultStreamHandler {
-    fn handle_stream(&self, stream: TcpStream) -> UResult {
-        todo!()
+    fn handle_stream(&self, mut stream: TcpStream) -> UResult {
+        let response = http::Response::builder()
+            .version(http::Version::HTTP_11)
+            .status(200)
+            .header("Content-Type", "application/json")
+            .body(r#"{"result":"ok"}"#)
+            .unwrap();
+        let mut conn = ServerConnection::new(Arc::new(self.tls_config.clone()))?;
+        let mut stream = rustls::Stream::new(&mut conn, &mut stream);
+        let request = read_http_request(&mut stream)?;
+        let update = serde_json::from_str::<Update>(request.body())?;
+        write_http_response(&mut stream, response)?;
+        self.dispatcher.dispatch(update)?;
+        Ok(())
     }
 }
 
