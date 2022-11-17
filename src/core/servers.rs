@@ -208,3 +208,18 @@ impl CommandServerBuilder {
         Ok(srv)
     }
 }
+
+impl StreamListenerExt<UnixListener> for CommandServer {
+    fn listen(&self) -> UResult {
+        self.stream_listener.listen()
+    }
+
+    fn request_stop(&self) {
+        self.stream_listener.request_stop()
+    }
+
+    fn is_stopped(&self) -> bool {
+        self.stream_listener.is_stopped()
+    }
+}
+
