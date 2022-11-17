@@ -85,7 +85,7 @@ where
     }
 
     pub fn set_handler<'b>(&'b mut self, handler: StreamHandlerArc<ListenerT>) -> &'b mut Self {
-        std::mem::replace(&mut self.stream_handler, Some(handler));
+        self.stream_handler = Some(handler);
         self
     }
 }
