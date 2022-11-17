@@ -105,12 +105,6 @@ impl UpdateServer {
     }
 }
 
-impl StreamHandler<TcpStream> for UpdateServer {
-    fn handle_stream(&self, stream: TcpStream) -> UResult {
-        todo!()
-    }
-}
-
 impl StreamListenerExt<TcpListener> for UpdateServer {
     fn listen(&self) -> UResult {
         self.stream_listener.listen()
