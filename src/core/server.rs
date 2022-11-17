@@ -96,8 +96,18 @@ impl UpdateServerBuilder {
     }
 }
 
-#[derive(Default)]
-pub struct DefaultUpdateHandler;
+pub struct DefaultUpdateHandler {
+    logger: Logger
+}
+
+impl DefaultUpdateHandler {
+    pub fn new(logger: Logger) -> Self {
+        Self {
+            logger
+        }
+    }
+}
+
 impl UpdateHandler for DefaultUpdateHandler {
     fn message(&self, _msg: telegram_bot_api::types::Message) -> UResult {
         println!("Received a message object!");
