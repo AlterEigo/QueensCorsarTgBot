@@ -1,7 +1,9 @@
 use crate::config;
 use crate::prelude::*;
 use std::net::TcpListener;
+use std::os::unix::net::UnixListener;
 use std::sync::Arc;
+use std::thread;
 use telegram_bot_api::bot;
 
 #[derive(Clone)]
@@ -98,13 +100,8 @@ async fn show_webhook_infos(ctx: &BootstrapRequirements, bot: &bot::BotApi) -> U
     }
 }
 
-pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
-    introduce_self(&ctx);
-
+fn bootstrap_update_server(ctx: &BootstrapRequirements) -> UResult {
     let srv_addr = format!("{}:{}", ctx.config.server_ip, ctx.config.server_port);
-    let bot_fut = instantiate_tgbot(&ctx);
-    // let listener_fut = instantiate_update_listener(&ctx);
-
     let tls_config = create_server_config(&ctx.config)?;
 
     let update_handler = Arc::new(DefaultUpdateHandler::new(ctx.logger.clone()));
@@ -131,19 +128,61 @@ pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
         .server_addr(&srv_addr)
         .stream_handler(stream_handler)
         .build()?;
+    update_server.listen()
+}
+
+fn bootstrap_command_server(ctx: &BootstrapRequirements) -> UResult {
+    let srv_addr = format!("/tmp/qcorsar_sock");
+
+    let command_handler = Arc::new(DefaultCommandHandler::new(ctx.logger.clone()));
+    let command_dispatcher = Arc::new(DefaultCommandDispatcher::new(
+        command_handler,
+        ctx.logger.clone(),
+    ));
+    let stream_handler = Arc::new(
+        DefaultUnixStreamHandler::new(command_dispatcher, ctx.logger.clone())
+    );
+    // let stream_listener = Arc::new(
+        // StreamListener::<UnixListener>::new()
+        // .logger(ctx.logger.clone())
+        // .listener(UnixListener::bind(&srv_addr)?)
+        // .stream_handler(stream_handler)
+        // .build(),
+    // );
+    let update_server = CommandServer::new()
+        .logger(ctx.logger.clone())
+        .server_addr(&srv_addr)
+        .stream_handler(stream_handler)
+        .build()?;
+    update_server.listen()
+}
+
+pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
+    introduce_self(&ctx);
+
+    let bot_fut = instantiate_tgbot(&ctx);
+    // let listener_fut = instantiate_update_listener(&ctx);
 
     {
         let bot = bot_fut.await?;
         show_webhook_infos(&ctx, &bot).await?;
     }
 
-    {
-        if let Err(err) = update_server.listen() {
-            crit!(ctx.logger, "Critical error while running the server"; "reason" => err.to_string());
-        }
-    }
+    thread::scope(|scope| {
 
-    // Ok(())
+        scope.spawn(|| {
+            if let Err(why) = bootstrap_update_server(&ctx) {
+                todo!()
+            }
+        });
 
-    todo!()
+        scope.spawn(|| {
+            if let Err(why) = bootstrap_command_server(&ctx) {
+                todo!()
+            }
+        });
+
+    });
+
+    Ok(())
 }
