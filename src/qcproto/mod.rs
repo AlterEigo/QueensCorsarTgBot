@@ -40,7 +40,8 @@ pub enum BotFamily {
 #[derive(Serialize,Deserialize)]
 pub struct Command {
     kind: CommandKind,
-    sender_bot_family: BotFamily
+    sender_bot_family: BotFamily,
+    protocol_version: u16
 }
 
 #[derive(Serialize,Deserialize,Debug)]
