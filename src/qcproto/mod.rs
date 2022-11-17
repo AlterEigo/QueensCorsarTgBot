@@ -37,7 +37,7 @@ pub enum BotFamily {
     WhatsApp
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize,Deserialize,Debug)]
 pub struct Command {
     kind: CommandKind,
     sender_bot_family: BotFamily,
