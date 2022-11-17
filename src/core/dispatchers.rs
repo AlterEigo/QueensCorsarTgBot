@@ -44,7 +44,8 @@ impl Dispatcher<Update> for DefaultUpdateDispatcher {
 }
 
 impl Dispatcher<Command> for DefaultCommandDispatcher {
-    fn dispatch(&self, _data: Command) -> UResult {
-        todo!()
+    fn dispatch(&self, data: Command) -> UResult {
+        info!(self.logger, "Incoming command: {:#?}", data);
+        Ok(())
     }
 }
