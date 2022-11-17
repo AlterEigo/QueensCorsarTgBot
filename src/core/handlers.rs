@@ -38,7 +38,7 @@ impl UpdateHandler for DefaultUpdateHandler {
     }
 }
 
-impl CommandHandler for DefaultUpdateHandler {
+impl CommandHandler for DefaultCommandHandler {
     fn forward_message(&self, _msg: Command) -> UResult {
         todo!()
     }
