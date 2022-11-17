@@ -1,6 +1,7 @@
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
+use std::path::PathBuf;
 
 use crate::prelude::*;
 
@@ -11,6 +12,7 @@ pub struct Config {
     pub private_key_path: String,
     pub certificate_path: String,
     pub token_var: String,
+    pub sock_addr: PathBuf
 }
 
 impl Default for Config {
@@ -22,6 +24,7 @@ impl Default for Config {
             private_key_path = 'private.key'
             certificate_path = 'server.crt'
             token_var = 'QUEENSCORSAR_TG_TOKEN'
+            sock_addr = '/tmp/qcorsar.sock'
             "#,
         )
         .unwrap()

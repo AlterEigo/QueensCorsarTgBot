@@ -104,7 +104,7 @@ fn bootstrap_update_server(ctx: &BootstrapRequirements) -> UResult {
 }
 
 fn bootstrap_command_server(ctx: &BootstrapRequirements) -> UResult {
-    let srv_addr = format!("/tmp/qcorsar_sock");
+    let srv_addr = format!("{}", ctx.config.sock_addr.to_string_lossy().into_owned());
 
     let command_handler = Arc::new(DefaultCommandHandler::new(ctx.logger.clone()));
     let command_dispatcher = Arc::new(DefaultCommandDispatcher::new(
