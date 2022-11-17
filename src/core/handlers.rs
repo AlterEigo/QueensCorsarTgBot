@@ -1,7 +1,9 @@
 use crate::prelude::*;
 use rustls::{ServerConfig, ServerConnection};
 use slog::Logger;
+use std::io::{Read,Write};
 use std::net::TcpStream;
+use std::os::unix::net::UnixStream;
 use std::sync::Arc;
 use telegram_bot_api::types::Update;
 
@@ -29,6 +31,16 @@ pub struct DefaultStreamHandler {
     dispatcher: Arc<dyn Dispatcher<Update>>,
     tls_config: ServerConfig,
     logger: Logger,
+}
+
+/// Default implementation of a unix stream handler
+///
+/// The default implementation expects that the data
+/// being transmitted over the stream is done according
+/// to the qcproto protocol
+pub struct DefaultUnixStreamHandler {
+    dispatcher: Arc<dyn Dispatcher<Command>>,
+    logger: Logger
 }
 
 /// Builder type allowing to configure and instantiate
@@ -90,9 +102,38 @@ impl DefaultStreamHandlerBuilder {
 }
 
 impl DefaultStreamHandler {
-    /// Instantiate a new dafault stream handler
+    /// Instantiate a new default stream handler
     pub fn new() -> DefaultStreamHandlerBuilder {
         Default::default()
+    }
+}
+
+impl DefaultUnixStreamHandler {
+    /// Instantiate a new default unix stream handler
+    pub fn new(dispatcher: Arc<dyn Dispatcher<Command>>, logger: Logger) -> DefaultUnixStreamHandler {
+        DefaultUnixStreamHandler {
+            dispatcher,
+            logger
+        }
+    }
+}
+
+impl StreamHandler<UnixStream> for DefaultUnixStreamHandler {
+    fn handle_stream(&self, mut stream: UnixStream) -> UResult {
+        let response = serde_json::to_string(&TransmissionResult::Received)?;
+        let mut buffer = String::new();
+        stream.read_to_string(&mut buffer);
+        let command = serde_json::from_str::<Command>(&buffer);
+        if let Err(_) = command {
+            write!(
+                stream,
+                "{}",
+                serde_json::to_string(&TransmissionResult::BadSyntax)?
+            );
+        }
+        let command = command.unwrap();
+        write!(stream, "{}", response);
+        self.dispatcher.dispatch(command)
     }
 }
 
