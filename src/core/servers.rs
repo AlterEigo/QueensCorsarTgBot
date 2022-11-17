@@ -126,11 +126,19 @@ pub struct CommandServer {
     stream_listener: Arc<dyn StreamListenerExt<UnixListener>>
 }
 
+#[derive(Default)]
 pub struct CommandServerBuilder {
     stream_handler: Option<Arc<dyn StreamHandler<UnixStream>>>,
     stream_listener: Option<Arc<dyn StreamListenerExt<UnixListener>>>,
     logger: Option<Logger>,
     bind_addr: Option<String>,
+}
+
+impl CommandServer {
+    /// Instantiate a new command server
+    fn new() -> CommandServerBuilder {
+        Default::default()
+    }
 }
 
 impl CommandServerBuilder {
