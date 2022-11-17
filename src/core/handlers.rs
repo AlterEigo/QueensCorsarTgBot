@@ -12,8 +12,20 @@ pub struct DefaultUpdateHandler {
     logger: Logger,
 }
 
+/// Default implementation of a qcproto command handler
+pub struct DefaultCommandHandler {
+    logger: Logger,
+}
+
 impl DefaultUpdateHandler {
     /// Instantiate a new default handler
+    pub fn new(logger: Logger) -> Self {
+        Self { logger }
+    }
+}
+
+impl DefaultCommandHandler {
+    /// Instantiate a new default command handler
     pub fn new(logger: Logger) -> Self {
         Self { logger }
     }
@@ -23,6 +35,12 @@ impl UpdateHandler for DefaultUpdateHandler {
     fn message(&self, _msg: telegram_bot_api::types::Message) -> UResult {
         info!(self.logger, "Received a message object!");
         Ok(())
+    }
+}
+
+impl CommandHandler for DefaultUpdateHandler {
+    fn forward_message(&self, _msg: Command) -> UResult {
+        todo!()
     }
 }
 
