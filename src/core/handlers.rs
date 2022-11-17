@@ -5,11 +5,13 @@ use std::net::TcpStream;
 use std::sync::Arc;
 use telegram_bot_api::types::Update;
 
+/// Default implementation of an update handler
 pub struct DefaultUpdateHandler {
     logger: Logger,
 }
 
 impl DefaultUpdateHandler {
+    /// Instantiate a new default handler
     pub fn new(logger: Logger) -> Self {
         Self { logger }
     }
@@ -22,12 +24,15 @@ impl UpdateHandler for DefaultUpdateHandler {
     }
 }
 
+/// Default implementation of an update handler
 pub struct DefaultStreamHandler {
     dispatcher: Arc<dyn Dispatcher<Update>>,
     tls_config: ServerConfig,
     logger: Logger,
 }
 
+/// Builder type allowing to configure and instantiate
+/// a default update handler
 #[derive(Default)]
 pub struct DefaultStreamHandlerBuilder {
     dispatcher: Option<Arc<dyn Dispatcher<Update>>>,
@@ -36,6 +41,7 @@ pub struct DefaultStreamHandlerBuilder {
 }
 
 impl DefaultStreamHandlerBuilder {
+    /// Set the data dispatcher
     pub fn dispatcher(self, dispatcher: Arc<dyn Dispatcher<Update>>) -> Self {
         Self {
             dispatcher: Some(dispatcher),
@@ -43,6 +49,7 @@ impl DefaultStreamHandlerBuilder {
         }
     }
 
+    /// Set the configuration for SSL/TLS encryption
     pub fn tls_config(self, tls_config: ServerConfig) -> Self {
         Self {
             tls_config: Some(tls_config),
@@ -50,6 +57,7 @@ impl DefaultStreamHandlerBuilder {
         }
     }
 
+    /// Set the integrated logger
     pub fn logger(self, logger: Logger) -> Self {
         Self {
             logger: Some(logger),
@@ -57,6 +65,8 @@ impl DefaultStreamHandlerBuilder {
         }
     }
 
+    /// Finalize the instantiation of a default stream
+    /// handler
     pub fn build(self) -> DefaultStreamHandler {
         assert!(
             self.logger.is_some(),
@@ -80,6 +90,7 @@ impl DefaultStreamHandlerBuilder {
 }
 
 impl DefaultStreamHandler {
+    /// Instantiate a new dafault stream handler
     pub fn new() -> DefaultStreamHandlerBuilder {
         Default::default()
     }

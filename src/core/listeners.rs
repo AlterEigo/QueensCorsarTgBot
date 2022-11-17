@@ -5,6 +5,9 @@ use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::ScopedJoinHandle;
 
+/// Default implementation of a stream listener for
+/// any type which implements the ListenerAdapter
+/// trait
 pub struct StreamListener<ListenerT>
 where
     ListenerT: ListenerAdapter,
@@ -15,6 +18,8 @@ where
     stop_requested: AtomicBool,
 }
 
+/// A builder type for instantiating the default
+/// stream listener
 pub struct StreamListenerBuilder<T>
 where
     T: ListenerAdapter,
@@ -41,6 +46,7 @@ impl<T> StreamListenerBuilder<T>
 where
     T: ListenerAdapter,
 {
+    /// Set the listener type
     pub fn listener(self, new_listener: T) -> Self {
         Self {
             listener: Some(new_listener),
@@ -48,6 +54,7 @@ where
         }
     }
 
+    /// Set the listener's logger
     pub fn logger(self, new_logger: Logger) -> Self {
         Self {
             logger: Some(new_logger),
@@ -55,6 +62,7 @@ where
         }
     }
 
+    /// Set an entity which will handle all established connections
     pub fn stream_handler(self, handler: StreamHandlerArc<T>) -> Self {
         Self {
             handler: Some(handler),
@@ -62,6 +70,7 @@ where
         }
     }
 
+    /// Finalize the instantiation of a stream listener
     pub fn build(self) -> StreamListener<T> {
         StreamListener {
             logger: self
@@ -80,10 +89,12 @@ impl<ListenerT> StreamListener<ListenerT>
 where
     ListenerT: ListenerAdapter,
 {
+    /// Instantiate a new default stream listener
     pub fn new() -> StreamListenerBuilder<ListenerT> {
         StreamListenerBuilder::<ListenerT>::default()
     }
 
+    /// Change the stream handler on the fly
     pub fn set_handler<'b>(&'b mut self, handler: StreamHandlerArc<ListenerT>) -> &'b mut Self {
         self.stream_handler = Some(handler);
         self

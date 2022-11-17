@@ -5,10 +5,14 @@ use crate::prelude::*;
 use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
 
+/// Struct containing all the data to run the server
+/// managing Telegram update webhook requests
 pub struct UpdateServer {
     stream_listener: Arc<dyn StreamListenerExt<TcpListener>>,
 }
 
+/// Builder type for the construction of an update
+/// server
 #[derive(Default)]
 pub struct UpdateServerBuilder {
     stream_handler: Option<Arc<dyn StreamHandler<TcpStream>>>,
@@ -18,17 +22,17 @@ pub struct UpdateServerBuilder {
 }
 
 impl UpdateServerBuilder {
+    /// Set the address for server in the format accepted by
+    /// the standard `std::net::TcpListener` type ('IP_ADDR:PORT')
     pub fn server_addr(self, addr: &str) -> Self {
-        assert!(
-            self.stream_listener.is_none(),
-            "You must either provide an address OR a listener"
-        );
         Self {
             bind_addr: Some(String::from(addr)),
             ..self
         }
     }
 
+    /// Set the logger for the server and all of the initialized
+    /// default modules
     pub fn logger(self, logger: Logger) -> Self {
         Self {
             logger: Some(logger),
@@ -36,35 +40,32 @@ impl UpdateServerBuilder {
         }
     }
 
+    /// Set a handler for all established TCP connections
     pub fn stream_handler(self, handler: Arc<dyn StreamHandler<TcpStream>>) -> Self {
-        assert!(
-            self.stream_listener.is_none(),
-            "Custom stream handler won't be used if a custom listener is provided"
-        );
         Self {
             stream_handler: Some(handler),
             ..self
         }
     }
 
+    /// Set a custom TCP listener
     pub fn stream_listener<ListenerT>(
         self,
         listener: Arc<dyn StreamListenerExt<TcpListener>>,
     ) -> Self {
-        assert!(
-            self.bind_addr.is_none(),
-            "You must either provide an address OR a listener"
-        );
-        assert!(
-            self.stream_handler.is_none(),
-            "A custom stream handler won't be used if a custom listener is provided"
-        );
         Self {
             stream_listener: Some(listener),
             ..self
         }
     }
 
+    /// Finalize the update server construction.
+    ///
+    /// Construction of the server fails in the following scenarios:
+    /// - A logger is not provided
+    /// - Both server address and custom stream listener are provided, or neither of them
+    /// - A custom stream handler is provided with the custom stream listener
+    /// - If an error occurs while initializing one of the subcomponents
     pub fn build(self) -> UResult<UpdateServer> {
         let flags = (
             self.logger.is_some(),
@@ -97,6 +98,7 @@ impl UpdateServerBuilder {
 }
 
 impl UpdateServer {
+    /// Instantiate a new update server
     pub fn new() -> UpdateServerBuilder {
         Default::default()
     }

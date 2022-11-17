@@ -16,14 +16,24 @@ pub trait LoggingEntity {
     fn logger(&self) -> Logger;
 }
 
+/// An interface for handling dispatched telegram
+/// updates
 pub trait UpdateHandler: Send + Sync {
+    /// Process a message received by the telegram bot
     fn message(&self, _msg: Message) -> UResult;
 }
 
+/// An interface for handling dispatched interprocess
+/// commands received from another bots in *qcproto*
+/// protocol
 pub trait CommandHandler: Send + Sync {
+    /// A request for forwarding a message to
+    /// another arbitrary platform
     fn forward_message(&self, _msg: Command) -> UResult;
 }
 
+/// An interface for handling established connections,
+/// or any other readable/writable stream of data
 pub trait StreamHandler<T>
 where
     T: io::Read + io::Write,
@@ -32,11 +42,18 @@ where
     fn handle_stream(&self, stream: T) -> UResult;
 }
 
+/// Convenient type for wrapping an Arc to a StreamHandler type
+/// which takes the listener's bound stream type
 pub type StreamHandlerArc<ListenerT> =
     Arc<dyn StreamHandler<<ListenerT as ListenerAdapter>::StreamT>>;
+
+/// Convenient type for wrapping a bare reference to a StreamHandler type
+/// which takes the listener's bound stream type
 pub type StreamHandlerRef<'a, ListenerT> =
     &'a dyn StreamHandler<<ListenerT as ListenerAdapter>::StreamT>;
 
+/// A wrapper trait which allows to configure any type
+/// of listener to be used with a StreamListener
 pub trait ListenerAdapter: Send + Sync {
     type StreamT: io::Read + io::Write + Send + Sync;
     type SockAddrT;
@@ -62,6 +79,9 @@ impl ListenerAdapter for uxnet::UnixListener {
     }
 }
 
+/// An interface which allows any type to listen
+/// on a configured listener type, implementing a
+/// listener adapter
 pub trait StreamListenerExt<ListenerT>
 where
     ListenerT: ListenerAdapter,
@@ -74,6 +94,9 @@ where
     fn listen(&self) -> UResult;
 }
 
+/// Convenience function allowing to transform a u8
+/// into its equivalent enumerated version of the
+/// http crate
 fn parse_http_version(v: u8) -> UResult<http::Version> {
     match v {
         0 => Ok(http::Version::HTTP_09),
@@ -84,6 +107,7 @@ fn parse_http_version(v: u8) -> UResult<http::Version> {
     }
 }
 
+/// Read a stream expecting a valid unencrypted HTTP request
 pub fn read_http_request<T>(stream: &mut T) -> UResult<http::Request<String>>
 where
     T: std::io::Read,
@@ -111,6 +135,7 @@ where
     Ok(request)
 }
 
+/// Write a valid unencrypted HTTP response into a given writable stream
 pub fn write_http_response<T>(stream: &mut T, response: http::Response<&str>) -> UResult
 where
     T: std::io::Write,
