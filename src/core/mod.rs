@@ -31,13 +31,3 @@ pub use handlers::*;
 pub use senders::*;
 pub use servers::*;
 pub use listeners::*;
-
-// fn dispatch_request(&self, request: Request<String>) -> UResult {
-// let update = serde_json::from_str::<Update>(request.body())?;
-// debug!(self.logger, "Received an update"; "update" => format!("{:#?}", update));
-// let dummy_context = UpdateContext {};
-// if let Some(message) = update.message {
-// self.handler.message(&dummy_context, message);
-// }
-// Ok(())
-// }
