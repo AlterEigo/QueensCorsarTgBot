@@ -19,10 +19,10 @@ pub mod application;
 pub struct UpdateContext;
 
 mod common;
-mod dispatcher;
-mod handler;
-mod sender;
-mod server;
+mod dispatchers;
+mod handlers;
+mod senders;
+mod servers;
 
 pub use common::*;
 pub use dispatcher::*;
