@@ -100,6 +100,7 @@ impl UpdateServerBuilder {
 pub struct DefaultUpdateHandler;
 impl UpdateHandler for DefaultUpdateHandler {
     fn message(&self, _msg: telegram_bot_api::types::Message) -> UResult {
+        println!("Received a message object!");
         Ok(())
     }
 }

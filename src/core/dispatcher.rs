@@ -1,3 +1,4 @@
+use slog::Logger;
 use telegram_bot_api::types::{Message, Update};
 
 use crate::prelude::*;
@@ -9,16 +10,19 @@ pub trait Dispatcher<T>: Send + Sync {
 
 pub struct DefaultUpdateDispatcher {
     handler: Arc<dyn UpdateHandler>,
+    logger: Logger
 }
 
 pub struct DefaultCommandDispatcher {
     handler: Arc<dyn CommandHandler>,
+    logger: Logger
 }
 
 impl DefaultUpdateDispatcher {
-    pub fn new(handler: Arc<dyn UpdateHandler>) -> Self {
+    pub fn new(handler: Arc<dyn UpdateHandler>, logger: Logger) -> Self {
         Self {
             handler: handler.clone(),
+            logger
         }
     }
 }
