@@ -1,10 +1,23 @@
 use crate::prelude::*;
+use slog::Logger;
 use telegram_bot_api::types::{Message, Update};
 
-pub trait UpdateHandler: Send + Sync {
-    fn message(&self, _msg: Message) -> UResult;
+pub struct DefaultUpdateHandler {
+    logger: Logger
 }
 
-pub trait CommandHandler: Send + Sync {
-    fn forward_message(&self, _msg: Command) -> UResult;
+impl DefaultUpdateHandler {
+    pub fn new(logger: Logger) -> Self {
+        Self {
+            logger
+        }
+    }
 }
+
+impl UpdateHandler for DefaultUpdateHandler {
+    fn message(&self, _msg: telegram_bot_api::types::Message) -> UResult {
+        info!(self.logger, "Received a message object!");
+        Ok(())
+    }
+}
+

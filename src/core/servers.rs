@@ -96,25 +96,6 @@ impl UpdateServerBuilder {
     }
 }
 
-pub struct DefaultUpdateHandler {
-    logger: Logger
-}
-
-impl DefaultUpdateHandler {
-    pub fn new(logger: Logger) -> Self {
-        Self {
-            logger
-        }
-    }
-}
-
-impl UpdateHandler for DefaultUpdateHandler {
-    fn message(&self, _msg: telegram_bot_api::types::Message) -> UResult {
-        info!(self.logger, "Received a message object!");
-        Ok(())
-    }
-}
-
 pub struct DefaultStreamHandler {
     dispatcher: Arc<dyn Dispatcher<Update>>,
     tls_config: ServerConfig,

@@ -21,6 +21,14 @@ pub trait LoggingEntity {
     fn logger(&self) -> Logger;
 }
 
+pub trait UpdateHandler: Send + Sync {
+    fn message(&self, _msg: Message) -> UResult;
+}
+
+pub trait CommandHandler: Send + Sync {
+    fn forward_message(&self, _msg: Command) -> UResult;
+}
+
 pub trait StreamHandler<T>
 where
     T: io::Read + io::Write,
