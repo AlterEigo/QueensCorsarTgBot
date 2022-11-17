@@ -24,6 +24,16 @@ pub struct DefaultCommandDispatcher {
     logger: Logger,
 }
 
+impl DefaultCommandDispatcher {
+    /// Instantiate a new default Telegram update dispatcher
+    pub fn new(handler: Arc<dyn CommandHandler>, logger: Logger) -> Self {
+        Self {
+            handler: handler.clone(),
+            logger,
+        }
+    }
+}
+
 impl DefaultUpdateDispatcher {
     /// Instantiate a new default Telegram update dispatcher
     pub fn new(handler: Arc<dyn UpdateHandler>, logger: Logger) -> Self {
