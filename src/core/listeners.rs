@@ -1,9 +1,9 @@
 use crate::prelude::*;
 
-use std::io;
 use slog::Logger;
-use std::sync::atomic::{AtomicBool,Ordering};
-use std::thread::{Scope,ScopedJoinHandle};
+use std::io;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread::ScopedJoinHandle;
 
 pub struct StreamListener<ListenerT>
 where
@@ -164,4 +164,3 @@ where
         })
     }
 }
-

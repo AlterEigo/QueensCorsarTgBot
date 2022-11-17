@@ -1,19 +1,17 @@
 use crate::prelude::*;
-use std::net::TcpStream;
-use rustls::{ServerConfig,ServerConnection};
+use rustls::{ServerConfig, ServerConnection};
 use slog::Logger;
+use std::net::TcpStream;
 use std::sync::Arc;
-use telegram_bot_api::types::{Message, Update};
+use telegram_bot_api::types::Update;
 
 pub struct DefaultUpdateHandler {
-    logger: Logger
+    logger: Logger,
 }
 
 impl DefaultUpdateHandler {
     pub fn new(logger: Logger) -> Self {
-        Self {
-            logger
-        }
+        Self { logger }
     }
 }
 
@@ -27,14 +25,14 @@ impl UpdateHandler for DefaultUpdateHandler {
 pub struct DefaultStreamHandler {
     dispatcher: Arc<dyn Dispatcher<Update>>,
     tls_config: ServerConfig,
-    logger: Logger
+    logger: Logger,
 }
 
 #[derive(Default)]
 pub struct DefaultStreamHandlerBuilder {
     dispatcher: Option<Arc<dyn Dispatcher<Update>>>,
     tls_config: Option<ServerConfig>,
-    logger: Option<Logger>
+    logger: Option<Logger>,
 }
 
 impl DefaultStreamHandlerBuilder {
@@ -60,14 +58,23 @@ impl DefaultStreamHandlerBuilder {
     }
 
     pub fn build(self) -> DefaultStreamHandler {
-        assert!(self.logger.is_some(), "Did not provide a logger for the default stream handler");
-        assert!(self.dispatcher.is_some(), "Did not provide an update dispatcher for the default stream handler");
-        assert!(self.tls_config.is_some(), "Did not provide a tls config for the default stream handler");
+        assert!(
+            self.logger.is_some(),
+            "Did not provide a logger for the default stream handler"
+        );
+        assert!(
+            self.dispatcher.is_some(),
+            "Did not provide an update dispatcher for the default stream handler"
+        );
+        assert!(
+            self.tls_config.is_some(),
+            "Did not provide a tls config for the default stream handler"
+        );
 
         DefaultStreamHandler {
             dispatcher: self.dispatcher.unwrap(),
             tls_config: self.tls_config.unwrap(),
-            logger: self.logger.unwrap()
+            logger: self.logger.unwrap(),
         }
     }
 }
@@ -95,4 +102,3 @@ impl StreamHandler<TcpStream> for DefaultStreamHandler {
         Ok(())
     }
 }
-

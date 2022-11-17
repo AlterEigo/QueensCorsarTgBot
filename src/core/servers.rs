@@ -1,12 +1,8 @@
-use rustls::{ServerConfig,ServerConnection};
 use slog::Logger;
-use telegram_bot_api::types::Update;
 
 use crate::prelude::*;
 
-use serde::{Serialize,Deserialize};
 use std::net::{TcpListener, TcpStream};
-use std::str::FromStr;
 use std::sync::Arc;
 
 pub struct UpdateServer {
@@ -74,13 +70,17 @@ impl UpdateServerBuilder {
             self.logger.is_some(),
             self.bind_addr.is_some(),
             self.stream_listener.is_some(),
-            self.stream_handler.is_some()
+            self.stream_handler.is_some(),
         );
         match flags {
             (false, _, _, _) => panic!("Did not provide a logger for the update server"),
-            (_, true, true, _) | (_, false, false, _) => panic!("You have to provide either an address to bind to, or a configured listener"),
-            (_, _, true, true) => panic!("A custom stream handler won't be used if you also provide a listener"),
-            _ => ()
+            (_, true, true, _) | (_, false, false, _) => {
+                panic!("You have to provide either an address to bind to, or a configured listener")
+            }
+            (_, _, true, true) => {
+                panic!("A custom stream handler won't be used if you also provide a listener")
+            }
+            _ => (),
         };
 
         let stream_handler = self.stream_handler.unwrap();

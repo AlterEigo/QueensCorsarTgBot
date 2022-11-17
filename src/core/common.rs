@@ -4,18 +4,13 @@ use crate::prelude::*;
 
 use std::io;
 use std::io::Write;
-use std::net::{self, TcpListener};
+use std::io::{BufRead, BufReader, BufWriter};
+use std::net;
 use std::os::unix::net as uxnet;
 use std::sync::Arc;
-use std::thread::{JoinHandle, ScopedJoinHandle};
-use std::{
-    io::{BufRead, BufReader, BufWriter, Read},
-    sync::atomic::{AtomicBool, Ordering},
-};
 
-use http::{Request, Version};
-use rustls::{ServerConfig, ServerConnection};
-use telegram_bot_api::types::{Message, Update};
+use http::Version;
+use telegram_bot_api::types::Message;
 
 pub trait LoggingEntity {
     fn logger(&self) -> Logger;

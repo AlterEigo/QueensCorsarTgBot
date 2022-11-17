@@ -1,5 +1,5 @@
 use slog::Logger;
-use telegram_bot_api::types::{Message, Update};
+use telegram_bot_api::types::Update;
 
 use crate::prelude::*;
 use std::sync::Arc;
@@ -10,19 +10,19 @@ pub trait Dispatcher<T>: Send + Sync {
 
 pub struct DefaultUpdateDispatcher {
     handler: Arc<dyn UpdateHandler>,
-    logger: Logger
+    logger: Logger,
 }
 
 pub struct DefaultCommandDispatcher {
     handler: Arc<dyn CommandHandler>,
-    logger: Logger
+    logger: Logger,
 }
 
 impl DefaultUpdateDispatcher {
     pub fn new(handler: Arc<dyn UpdateHandler>, logger: Logger) -> Self {
         Self {
             handler: handler.clone(),
-            logger
+            logger,
         }
     }
 }
