@@ -109,7 +109,13 @@ pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
 
     let update_handler = Arc::new(DefaultUpdateHandler::new(ctx.logger.clone()));
     let update_dispatcher = Arc::new(DefaultUpdateDispatcher::new(update_handler, ctx.logger.clone()));
-    let stream_handler = Arc::new(DefaultStreamHandler::new(update_dispatcher, tls_config));
+    let stream_handler = Arc::new(
+        DefaultStreamHandler::new()
+            .logger(ctx.logger.clone())
+            .dispatcher(update_dispatcher.clone())
+            .tls_config(tls_config.clone())
+            .build()
+    );
     // let stream_listener = Arc::new(
         // StreamListener::<TcpListener>::new()
             // .logger(ctx.logger.clone())
