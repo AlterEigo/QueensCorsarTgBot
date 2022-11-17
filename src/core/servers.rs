@@ -136,7 +136,7 @@ pub struct CommandServerBuilder {
 
 impl CommandServer {
     /// Instantiate a new command server
-    fn new() -> CommandServerBuilder {
+    pub fn new() -> CommandServerBuilder {
         Default::default()
     }
 }
