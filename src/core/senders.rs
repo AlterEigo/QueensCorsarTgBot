@@ -13,6 +13,18 @@ where
     stream_type: PhantomData<StreamT>,
 }
 
+impl<StreamT> DataSender<StreamT>
+where
+    StreamT: ConnectorAdapter,
+{
+    pub fn new(destination: String) -> Self {
+        Self {
+            destination,
+            stream_type: PhantomData
+        }
+    }
+}
+
 impl<StreamT> DataSenderExt<StreamT> for DataSender<StreamT>
 where
     StreamT: ConnectorAdapter,
