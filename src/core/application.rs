@@ -26,7 +26,7 @@ fn introduce_self(ctx: &BootstrapRequirements) {
 }
 
 fn extract_token(ctx: &BootstrapRequirements) -> UResult<String> {
-    let token = std::env::var(&ctx.config.token_var);
+    let token = std::env::var(&ctx.config.general.token_var);
     if token.is_err() {
         crit!(
             ctx.logger,
@@ -52,7 +52,7 @@ async fn instantiate_tgbot(ctx: &BootstrapRequirements) -> UResult<bot::BotApi> 
             crit!(
                 ctx.logger,
                 "Could not instantiate the bot with the provided token";
-                "env token" => &ctx.config.token_var,
+                "env token" => &ctx.config.general.token_var,
                 "reason" => format!("{:#?}", why)
             );
             Err("BotApi instantiation error".into())
@@ -75,7 +75,7 @@ async fn show_webhook_infos(ctx: &BootstrapRequirements, bot: &bot::BotApi) -> U
 }
 
 fn bootstrap_update_server(ctx: &BootstrapRequirements) -> UResult {
-    let srv_addr = format!("{}:{}", ctx.config.server_ip, ctx.config.server_port);
+    let srv_addr = format!("{}:{}", ctx.config.general.server_ip, ctx.config.general.server_port);
     let tls_config = create_server_config(&ctx.config)?;
 
     let update_handler = Arc::new(DefaultUpdateHandler::new(ctx.logger.clone()));
@@ -106,7 +106,7 @@ fn bootstrap_update_server(ctx: &BootstrapRequirements) -> UResult {
 }
 
 fn bootstrap_command_server(ctx: &BootstrapRequirements) -> UResult {
-    let srv_addr = format!("{}", ctx.config.sock_addr.to_string_lossy().into_owned());
+    let srv_addr = format!("{}", ctx.config.general.sock_addr.to_string_lossy().into_owned());
 
     let command_handler = Arc::new(DefaultCommandHandler::new(ctx.logger.clone()));
     let command_dispatcher = Arc::new(DefaultCommandDispatcher::new(

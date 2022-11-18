@@ -46,8 +46,8 @@ pub fn load_x509_secret_key(key_path: &str) -> UResult<PrivateKey> {
 }
 
 pub fn load_x509_credentials(config: &Config) -> UResult<(Vec<Certificate>, PrivateKey)> {
-    let certs = load_x509_certs(&config.certificate_path)?;
-    let key = load_x509_secret_key(&config.private_key_path)?;
+    let certs = load_x509_certs(&config.general.certificate_path)?;
+    let key = load_x509_secret_key(&config.general.private_key_path)?;
     Ok((certs, key))
 }
 

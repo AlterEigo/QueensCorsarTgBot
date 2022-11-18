@@ -1,3 +1,31 @@
+//! Main configuration module which defines different
+//! settings used by the application
+//!
+//! All available settings:
+//! ```toml
+//! [general] # Mandatory application settings
+//! \# Interface and port used to deploy a server listening
+//! \# for incoming telegram updates
+//! server_ip   = 'IP_ADDR'
+//! server_port = PORT
+//!
+//! \# Paths to the SSL private key and bot's certificate
+//! \# used by telegram for authentication
+//! private_key_path = 'FILEPATH'
+//! certificate_path = 'FILEPATH'
+//!
+//! \# Name of the environment variable used to retrieve
+//! \# telegram api token
+//! token_var = 'VAR_NAME'
+//!
+//! \# Path to the socket used to receive data from other bots
+//! sock_addr = 'FILEPATH'
+//!
+//! [integrations] # Optional integration settings
+//! \# Filepath of the listener socket of the discord bot
+//! discord = 'FILEPATH'
+//! ```
+
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
@@ -12,7 +40,7 @@ pub struct ServersSection {
     whatsapp: Option<PathBuf>
 }
 
-/// Main application config structure
+/// General application settings
 ///
 /// Available settings:
 /// - `server_ip` and `server_port`: Interface and port used to deploy a server
@@ -23,16 +51,25 @@ pub struct ServersSection {
 ///   api token
 /// - `sock_addr`: Path to the socket used to receive data from other bots
 ///   via qcproto protocol
-/// - 'integrations': Known sockets of other bots able to communicate via
-///   qcproto protocol
 #[derive(Deserialize,Serialize,Clone,Debug)]
-pub struct Config {
+pub struct GeneralSection {
     pub server_ip: String,
     pub server_port: u16,
     pub private_key_path: String,
     pub certificate_path: String,
     pub token_var: String,
     pub sock_addr: PathBuf,
+}
+
+/// Main application config structure
+///
+/// Available sections:
+/// - *general*: All the mandatory application settings
+/// - *integrations*: Known sockets of other bots able to communicate via
+///   qcproto protocol
+#[derive(Deserialize,Serialize,Clone,Debug)]
+pub struct Config {
+    pub general: GeneralSection,
     pub integrations: Option<ServersSection>
 }
 
@@ -40,6 +77,7 @@ impl Default for Config {
     fn default() -> Self {
         toml::from_str::<Config>(
             r#"
+            [general]
             server_ip = '127.0.0.1'
             server_port = 8443
             private_key_path = 'private.key'
