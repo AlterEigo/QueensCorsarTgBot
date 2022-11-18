@@ -23,3 +23,8 @@ toml = "0.5.9"
 [dependencies.tokio]
 version = "1"
 features = ["full"]
+
+[dependencies.qcproto]
+git = "https://github.com/AlterEigo/QCProto.git"
+branch = "master"
+version = "0.1.0"

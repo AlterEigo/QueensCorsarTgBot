@@ -4,7 +4,6 @@ mod config;
 mod core;
 mod logger;
 mod prelude;
-mod qcproto;
 mod utility;
 
 use crate::prelude::*;
