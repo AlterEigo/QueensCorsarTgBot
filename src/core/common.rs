@@ -3,6 +3,7 @@ use slog::Logger;
 use crate::prelude::*;
 
 use std::io;
+use std::path::Path;
 use std::io::Write;
 use std::io::{BufRead, BufReader, BufWriter};
 use std::net;
@@ -14,6 +15,17 @@ use telegram_bot_api::types::Message;
 
 pub trait LoggingEntity {
     fn logger(&self) -> Logger;
+}
+
+/// Adapter trait which indicates if a type is able to
+/// connect to some address and return a stream as a
+/// result
+pub trait ConnectorAdapter {
+    type StreamT: io::Read + io::Write + Send + Sync;
+
+    /// Connect to some endpoint addressed by a string path
+    fn connect(addr: &str) -> io::Result<Self::StreamT>
+        where Self: Sized;
 }
 
 /// An interface for handling dispatched telegram
@@ -59,6 +71,24 @@ pub trait ListenerAdapter: Send + Sync {
     type SockAddrT;
 
     fn accept(&self) -> io::Result<(Self::StreamT, Self::SockAddrT)>;
+}
+
+impl ConnectorAdapter for net::TcpStream {
+    type StreamT = net::TcpStream;
+
+    fn connect(path: &str) -> io::Result<Self::StreamT>
+            where Self: Sized {
+        net::TcpStream::connect(path)
+    }
+}
+
+impl ConnectorAdapter for uxnet::UnixStream {
+    type StreamT = uxnet::UnixStream;
+
+    fn connect(addr: &str) -> io::Result<Self::StreamT>
+            where Self: Sized {
+        uxnet::UnixStream::connect(addr)
+    }
 }
 
 impl ListenerAdapter for net::TcpListener {
