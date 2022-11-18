@@ -16,8 +16,8 @@ const PROTOCOL_VERSION: u16 = 100;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ActorInfos {
-    server: String,
-    sender: String,
+    pub server: String,
+    pub sender: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -39,9 +39,9 @@ pub enum BotFamily {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Command {
-    kind: CommandKind,
-    sender_bot_family: BotFamily,
-    protocol_version: u16,
+    pub kind: CommandKind,
+    pub sender_bot_family: BotFamily,
+    pub protocol_version: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
