@@ -38,3 +38,19 @@ where
         Ok(write!(connection, "{}", payload)?)
     }
 }
+
+pub struct CommandSender {
+    sender: DataSender<UnixStream>
+}
+
+impl CommandSender {
+    pub fn new(destination: String) -> Self {
+        Self {
+            sender: DataSender::new(destination)
+        }
+    }
+
+    pub fn send(&self, cmd: Command) -> UResult {
+        self.sender.send_data(cmd)
+    }
+}
