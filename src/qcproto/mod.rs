@@ -14,37 +14,37 @@ use crate::prelude::*;
 
 const PROTOCOL_VERSION: u16 = 100;
 
-#[derive(Serialize,Deserialize,Debug,Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ActorInfos {
     server: String,
-    sender: String
+    sender: String,
 }
 
-#[derive(Serialize,Deserialize,Debug,Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum CommandKind {
     ForwardMessage {
         from: ActorInfos,
         to: ActorInfos,
-        content: String
+        content: String,
     },
-    GetOnlineUsers
+    GetOnlineUsers,
 }
 
-#[derive(Serialize,Deserialize,Debug,Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum BotFamily {
     Discord,
     Telegram,
-    WhatsApp
+    WhatsApp,
 }
 
-#[derive(Serialize,Deserialize,Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Command {
     kind: CommandKind,
     sender_bot_family: BotFamily,
-    protocol_version: u16
+    protocol_version: u16,
 }
 
-#[derive(Serialize,Deserialize,Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum TransmissionResult {
     Received,
     BadSyntax,

@@ -28,16 +28,16 @@
 
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::io::Write;
 use std::path::PathBuf;
-use std::collections::HashMap;
 
 use crate::prelude::*;
 
-#[derive(Deserialize,Serialize,Clone,Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ServersSection {
     discord: Option<PathBuf>,
-    whatsapp: Option<PathBuf>
+    whatsapp: Option<PathBuf>,
 }
 
 /// General application settings
@@ -51,7 +51,7 @@ pub struct ServersSection {
 ///   api token
 /// - `sock_addr`: Path to the socket used to receive data from other bots
 ///   via qcproto protocol
-#[derive(Deserialize,Serialize,Clone,Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct GeneralSection {
     pub server_ip: String,
     pub server_port: u16,
@@ -67,10 +67,10 @@ pub struct GeneralSection {
 /// - *general*: All the mandatory application settings
 /// - *integrations*: Known sockets of other bots able to communicate via
 ///   qcproto protocol
-#[derive(Deserialize,Serialize,Clone,Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Config {
     pub general: GeneralSection,
-    pub integrations: Option<ServersSection>
+    pub integrations: Option<ServersSection>,
 }
 
 impl Default for Config {

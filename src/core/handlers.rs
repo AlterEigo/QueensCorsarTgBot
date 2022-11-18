@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use rustls::{ServerConfig, ServerConnection};
 use slog::Logger;
-use std::io::{Read,Write};
+use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::os::unix::net::UnixStream;
 use std::sync::Arc;
@@ -58,7 +58,7 @@ pub struct DefaultStreamHandler {
 /// to the qcproto protocol
 pub struct DefaultUnixStreamHandler {
     dispatcher: Arc<dyn Dispatcher<Command>>,
-    logger: Logger
+    logger: Logger,
 }
 
 /// Builder type allowing to configure and instantiate
@@ -128,11 +128,11 @@ impl DefaultStreamHandler {
 
 impl DefaultUnixStreamHandler {
     /// Instantiate a new default unix stream handler
-    pub fn new(dispatcher: Arc<dyn Dispatcher<Command>>, logger: Logger) -> DefaultUnixStreamHandler {
-        DefaultUnixStreamHandler {
-            dispatcher,
-            logger
-        }
+    pub fn new(
+        dispatcher: Arc<dyn Dispatcher<Command>>,
+        logger: Logger,
+    ) -> DefaultUnixStreamHandler {
+        DefaultUnixStreamHandler { dispatcher, logger }
     }
 }
 

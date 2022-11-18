@@ -4,11 +4,11 @@ use slog::Logger;
 use crate::prelude::*;
 
 use std::io;
-use std::path::Path;
 use std::io::Write;
 use std::io::{BufRead, BufReader, BufWriter};
 use std::net;
 use std::os::unix::net as uxnet;
+use std::path::Path;
 use std::sync::Arc;
 
 use http::Version;
@@ -26,16 +26,19 @@ pub trait ConnectorAdapter {
 
     /// Connect to some endpoint addressed by a string path
     fn connect(addr: &str) -> io::Result<Self::StreamT>
-        where Self: Sized;
+    where
+        Self: Sized;
 }
 
 /// An interface which defines a type able to send
 /// arbitrary serializable data over streams
 pub trait DataSenderExt<StreamT>
-    where StreamT: ConnectorAdapter
+where
+    StreamT: ConnectorAdapter,
 {
-    fn send_data<D>(data: D) -> UResult
-        where D: Serialize;
+    fn send_data<D>(&self, data: D) -> UResult
+    where
+        D: Serialize;
 }
 
 /// An interface for handling dispatched telegram
@@ -87,7 +90,9 @@ impl ConnectorAdapter for net::TcpStream {
     type StreamT = net::TcpStream;
 
     fn connect(path: &str) -> io::Result<Self::StreamT>
-            where Self: Sized {
+    where
+        Self: Sized,
+    {
         net::TcpStream::connect(path)
     }
 }
@@ -96,7 +101,9 @@ impl ConnectorAdapter for uxnet::UnixStream {
     type StreamT = uxnet::UnixStream;
 
     fn connect(addr: &str) -> io::Result<Self::StreamT>
-            where Self: Sized {
+    where
+        Self: Sized,
+    {
         uxnet::UnixStream::connect(addr)
     }
 }

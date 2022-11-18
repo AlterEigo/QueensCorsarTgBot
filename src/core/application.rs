@@ -75,7 +75,10 @@ async fn show_webhook_infos(ctx: &BootstrapRequirements, bot: &bot::BotApi) -> U
 }
 
 fn bootstrap_update_server(ctx: &BootstrapRequirements) -> UResult {
-    let srv_addr = format!("{}:{}", ctx.config.general.server_ip, ctx.config.general.server_port);
+    let srv_addr = format!(
+        "{}:{}",
+        ctx.config.general.server_ip, ctx.config.general.server_port
+    );
     let tls_config = create_server_config(&ctx.config)?;
 
     let update_handler = Arc::new(DefaultUpdateHandler::new(ctx.logger.clone()));
@@ -106,22 +109,26 @@ fn bootstrap_update_server(ctx: &BootstrapRequirements) -> UResult {
 }
 
 fn bootstrap_command_server(ctx: &BootstrapRequirements) -> UResult {
-    let srv_addr = format!("{}", ctx.config.general.sock_addr.to_string_lossy().into_owned());
+    let srv_addr = format!(
+        "{}",
+        ctx.config.general.sock_addr.to_string_lossy().into_owned()
+    );
 
     let command_handler = Arc::new(DefaultCommandHandler::new(ctx.logger.clone()));
     let command_dispatcher = Arc::new(DefaultCommandDispatcher::new(
         command_handler,
         ctx.logger.clone(),
     ));
-    let stream_handler = Arc::new(
-        DefaultUnixStreamHandler::new(command_dispatcher, ctx.logger.clone())
-    );
+    let stream_handler = Arc::new(DefaultUnixStreamHandler::new(
+        command_dispatcher,
+        ctx.logger.clone(),
+    ));
     // let stream_listener = Arc::new(
-        // StreamListener::<UnixListener>::new()
-        // .logger(ctx.logger.clone())
-        // .listener(UnixListener::bind(&srv_addr)?)
-        // .stream_handler(stream_handler)
-        // .build(),
+    // StreamListener::<UnixListener>::new()
+    // .logger(ctx.logger.clone())
+    // .listener(UnixListener::bind(&srv_addr)?)
+    // .stream_handler(stream_handler)
+    // .build(),
     // );
     let update_server = CommandServer::new()
         .logger(ctx.logger.clone())
@@ -142,10 +149,13 @@ pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
     }
 
     thread::scope(|scope| -> UResult {
-
         scope.spawn(|| -> UResult {
             if let Err(why) = bootstrap_update_server(&ctx) {
-                crit!(ctx.logger, "An error occured while running the update server: {:#?}", why);
+                crit!(
+                    ctx.logger,
+                    "An error occured while running the update server: {:#?}",
+                    why
+                );
                 Err(why.into())
             } else {
                 Ok(())
@@ -154,7 +164,11 @@ pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
 
         scope.spawn(|| -> UResult {
             if let Err(why) = bootstrap_command_server(&ctx) {
-                crit!(ctx.logger, "An error occured while running the command server: {:#?}", why);
+                crit!(
+                    ctx.logger,
+                    "An error occured while running the command server: {:#?}",
+                    why
+                );
                 Err(why.into())
             } else {
                 Ok(())

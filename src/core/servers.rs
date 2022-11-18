@@ -123,7 +123,7 @@ impl StreamListenerExt<TcpListener> for UpdateServer {
 /// allowing to communicate with other bots using qcproto
 /// running on the local machine via unix sockets
 pub struct CommandServer {
-    stream_listener: Arc<dyn StreamListenerExt<UnixListener>>
+    stream_listener: Arc<dyn StreamListenerExt<UnixListener>>,
 }
 
 #[derive(Default)]
@@ -230,4 +230,3 @@ impl StreamListenerExt<UnixListener> for CommandServer {
         self.stream_listener.is_stopped()
     }
 }
-
