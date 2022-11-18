@@ -36,8 +36,8 @@ use crate::prelude::*;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ServersSection {
-    discord: Option<PathBuf>,
-    whatsapp: Option<PathBuf>,
+    pub discord: Option<PathBuf>,
+    pub whatsapp: Option<PathBuf>,
 }
 
 /// General application settings
