@@ -1,3 +1,4 @@
+use serde::Serialize;
 use slog::Logger;
 
 use crate::prelude::*;
@@ -26,6 +27,13 @@ pub trait ConnectorAdapter {
     /// Connect to some endpoint addressed by a string path
     fn connect(addr: &str) -> io::Result<Self::StreamT>
         where Self: Sized;
+}
+
+/// An interface which defines a type able to send
+/// arbitrary serializable data over streams
+pub trait DataSenderExt<StreamT> {
+    fn send_data<D>(data: D) -> UResult
+        where D: Serialize;
 }
 
 /// An interface for handling dispatched telegram
