@@ -68,8 +68,21 @@ impl DefaultCommandHandler {
 }
 
 impl UpdateHandler for DefaultUpdateHandler {
-    fn message(&self, _msg: telegram_bot_api::types::Message) -> UResult {
+    fn message(&self, msg: telegram_bot_api::types::Message) -> UResult {
         info!(self.logger, "Received a message object!");
+        let cmd = Command {
+            kind: CommandKind::ForwardMessage {
+                from: ActorInfos { server: "tg_group_id".to_string(), sender: "AlterEigo".to_string() },
+                to: ActorInfos { server: "discord_group_id".to_string(), sender: "Anaxenomun".to_string() },
+                content: msg.text.unwrap_or(String::from(""))
+            },
+            sender_bot_family: BotFamily::Telegram,
+            protocol_version: 100
+        };
+
+        if let Some(ref sender) = self.discord_sender {
+            sender.send(cmd)?;
+        }
         Ok(())
     }
 }
