@@ -31,7 +31,9 @@ pub trait ConnectorAdapter {
 
 /// An interface which defines a type able to send
 /// arbitrary serializable data over streams
-pub trait DataSenderExt<StreamT> {
+pub trait DataSenderExt<StreamT>
+    where StreamT: ConnectorAdapter
+{
     fn send_data<D>(data: D) -> UResult
         where D: Serialize;
 }
