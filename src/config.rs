@@ -5,6 +5,17 @@ use std::path::PathBuf;
 
 use crate::prelude::*;
 
+/// Main application config structure
+///
+/// Available settings:
+/// - `server_ip` and `server_port`: Interface and port used to deploy a server
+///   listening for incoming telegram updates
+/// - `private_key_path`: Location of the private key used for SSL encryption
+/// - `certificate_path`: Server's certificate used to authenticate our server
+/// - `token_var`: Name of the environment variable used to retrieve telegram
+///   api token
+/// - `sock_addr`: Path to the socket used to receive data from other bots
+///   via qcproto protocol
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Config {
     pub server_ip: String,
