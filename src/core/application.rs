@@ -21,6 +21,8 @@ fn introduce_self(ctx: &BootstrapRequirements) {
         "author" => "Iaroslav Sorokin",
         "version" => config::PACKAGE_VERSION,
     );
+
+    debug!(ctx.logger, "Loaded config: {:#?}", ctx.config);
 }
 
 fn extract_token(ctx: &BootstrapRequirements) -> UResult<String> {
