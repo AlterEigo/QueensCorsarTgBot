@@ -33,7 +33,7 @@ pub struct Config {
     pub certificate_path: String,
     pub token_var: String,
     pub sock_addr: PathBuf,
-    pub integrations: ServersSection
+    pub integrations: Option<ServersSection>
 }
 
 impl Default for Config {
