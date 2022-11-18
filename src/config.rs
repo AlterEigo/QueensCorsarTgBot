@@ -2,8 +2,15 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::path::PathBuf;
+use std::collections::HashMap;
 
 use crate::prelude::*;
+
+#[derive(Deserialize,Serialize,Clone,Debug)]
+pub struct ServersSection {
+    discord: Option<PathBuf>,
+    whatsapp: Option<PathBuf>
+}
 
 /// Main application config structure
 ///
@@ -16,14 +23,17 @@ use crate::prelude::*;
 ///   api token
 /// - `sock_addr`: Path to the socket used to receive data from other bots
 ///   via qcproto protocol
-#[derive(Deserialize, Serialize, Clone)]
+/// - 'integrations': Known sockets of other bots able to communicate via
+///   qcproto protocol
+#[derive(Deserialize,Serialize,Clone,Debug)]
 pub struct Config {
     pub server_ip: String,
     pub server_port: u16,
     pub private_key_path: String,
     pub certificate_path: String,
     pub token_var: String,
-    pub sock_addr: PathBuf
+    pub sock_addr: PathBuf,
+    pub integrations: ServersSection
 }
 
 impl Default for Config {
@@ -35,7 +45,7 @@ impl Default for Config {
             private_key_path = 'private.key'
             certificate_path = 'server.crt'
             token_var = 'QUEENSCORSAR_TG_TOKEN'
-            sock_addr = '/tmp/qcorsar.sock'
+            sock_addr = '/tmp/qcorsar.tg.sock'
             "#,
         )
         .unwrap()
