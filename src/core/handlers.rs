@@ -8,7 +8,9 @@ use std::sync::Arc;
 use telegram_bot_api::types::Update;
 
 /// Default implementation of an update handler
+#[derive(Debug)]
 pub struct DefaultUpdateHandler {
+    discord_sender: Option<Arc<CommandSender>>,
     logger: Logger,
 }
 
@@ -19,8 +21,39 @@ pub struct DefaultCommandHandler {
 
 impl DefaultUpdateHandler {
     /// Instantiate a new default handler
-    pub fn new(logger: Logger) -> Self {
-        Self { logger }
+    pub fn new() -> DefaultUpdateHandlerBuilder {
+        Default::default()
+    }
+}
+
+#[derive(Default,Debug)]
+pub struct DefaultUpdateHandlerBuilder {
+    discord_sender: Option<Arc<CommandSender>>,
+    logger: Option<Logger>
+}
+
+impl DefaultUpdateHandlerBuilder {
+    pub fn discord_sender(self, sender: Arc<CommandSender>) -> Self {
+        Self {
+            discord_sender: Some(sender),
+            ..self
+        }
+    }
+
+    pub fn logger(self, logger: Logger) -> Self {
+        Self {
+            logger: Some(logger),
+            ..self
+        }
+    }
+
+    pub fn build(self) -> DefaultUpdateHandler {
+        assert!(self.logger.is_some(), "Did not provide a logger for the default update handler");
+
+        DefaultUpdateHandler {
+            discord_sender: self.discord_sender,
+            logger: self.logger.unwrap()
+        }
     }
 }
 

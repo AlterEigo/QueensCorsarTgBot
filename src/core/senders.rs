@@ -5,6 +5,7 @@ use crate::prelude::*;
 use std::io;
 use std::io::Write;
 
+#[derive(Debug)]
 pub struct DataSender<StreamT>
 where
     StreamT: ConnectorAdapter,
@@ -39,6 +40,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub struct CommandSender {
     sender: DataSender<UnixStream>
 }

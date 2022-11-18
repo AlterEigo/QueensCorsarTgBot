@@ -81,7 +81,11 @@ fn bootstrap_update_server(ctx: &BootstrapRequirements) -> UResult {
     );
     let tls_config = create_server_config(&ctx.config)?;
 
-    let update_handler = Arc::new(DefaultUpdateHandler::new(ctx.logger.clone()));
+    let update_handler = Arc::new(
+        DefaultUpdateHandler::new()
+            .logger(ctx.logger.clone())
+            .build()
+    );
     let update_dispatcher = Arc::new(DefaultUpdateDispatcher::new(
         update_handler,
         ctx.logger.clone(),
