@@ -139,21 +139,28 @@ pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
         show_webhook_infos(&ctx, &bot).await?;
     }
 
-    thread::scope(|scope| {
+    thread::scope(|scope| -> UResult {
 
-        scope.spawn(|| {
+        scope.spawn(|| -> UResult {
             if let Err(why) = bootstrap_update_server(&ctx) {
-                todo!()
+                crit!(ctx.logger, "An error occured while running the update server: {:#?}", why);
+                Err(why.into())
+            } else {
+                Ok(())
             }
         });
 
-        scope.spawn(|| {
+        scope.spawn(|| -> UResult {
             if let Err(why) = bootstrap_command_server(&ctx) {
-                todo!()
+                crit!(ctx.logger, "An error occured while running the command server: {:#?}", why);
+                Err(why.into())
+            } else {
+                Ok(())
             }
         });
 
-    });
+        Ok(())
+    })?;
 
     Ok(())
 }
