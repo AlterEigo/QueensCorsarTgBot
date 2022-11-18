@@ -74,6 +74,23 @@ async fn show_webhook_infos(ctx: &BootstrapRequirements, bot: &bot::BotApi) -> U
     }
 }
 
+fn prepare_update_handler(ctx: &BootstrapRequirements) -> UResult<Arc<dyn UpdateHandler>> {
+    let builder = DefaultUpdateHandler::new().logger(ctx.logger.clone());
+    let integrations = ctx.config.integrations.as_ref();
+    if let None = integrations {
+        return Ok(Arc::new(builder.build()));
+    }
+    let integrations = integrations.unwrap();
+    let builder = if let Some(ref addr) = integrations.discord {
+        builder.discord_sender(Arc::new(CommandSender::new(
+            addr.to_string_lossy().into_owned(),
+        )))
+    } else {
+        builder
+    };
+    Ok(Arc::new(builder.build()))
+}
+
 fn bootstrap_update_server(ctx: &BootstrapRequirements) -> UResult {
     let srv_addr = format!(
         "{}:{}",
@@ -81,11 +98,7 @@ fn bootstrap_update_server(ctx: &BootstrapRequirements) -> UResult {
     );
     let tls_config = create_server_config(&ctx.config)?;
 
-    let update_handler = Arc::new(
-        DefaultUpdateHandler::new()
-            .logger(ctx.logger.clone())
-            .build()
-    );
+    let update_handler = prepare_update_handler(ctx)?;
     let update_dispatcher = Arc::new(DefaultUpdateDispatcher::new(
         update_handler,
         ctx.logger.clone(),

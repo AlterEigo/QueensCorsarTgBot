@@ -26,10 +26,10 @@ impl DefaultUpdateHandler {
     }
 }
 
-#[derive(Default,Debug)]
+#[derive(Default, Debug)]
 pub struct DefaultUpdateHandlerBuilder {
     discord_sender: Option<Arc<CommandSender>>,
-    logger: Option<Logger>
+    logger: Option<Logger>,
 }
 
 impl DefaultUpdateHandlerBuilder {
@@ -48,11 +48,14 @@ impl DefaultUpdateHandlerBuilder {
     }
 
     pub fn build(self) -> DefaultUpdateHandler {
-        assert!(self.logger.is_some(), "Did not provide a logger for the default update handler");
+        assert!(
+            self.logger.is_some(),
+            "Did not provide a logger for the default update handler"
+        );
 
         DefaultUpdateHandler {
             discord_sender: self.discord_sender,
-            logger: self.logger.unwrap()
+            logger: self.logger.unwrap(),
         }
     }
 }

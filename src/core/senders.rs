@@ -21,7 +21,7 @@ where
     pub fn new(destination: String) -> Self {
         Self {
             destination,
-            stream_type: PhantomData
+            stream_type: PhantomData,
         }
     }
 }
@@ -42,13 +42,13 @@ where
 
 #[derive(Debug)]
 pub struct CommandSender {
-    sender: DataSender<UnixStream>
+    sender: DataSender<UnixStream>,
 }
 
 impl CommandSender {
     pub fn new(destination: String) -> Self {
         Self {
-            sender: DataSender::new(destination)
+            sender: DataSender::new(destination),
         }
     }
 
