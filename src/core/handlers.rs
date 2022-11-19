@@ -13,12 +13,6 @@ pub struct DefaultUpdateHandler {
     discord_sender: Option<Arc<CommandSender>>,
     logger: Logger,
 }
-
-/// Default implementation of a qcproto command handler
-pub struct DefaultCommandHandler {
-    logger: Logger,
-}
-
 impl DefaultUpdateHandler {
     /// Instantiate a new default handler
     pub fn new() -> DefaultUpdateHandlerBuilder {
@@ -60,13 +54,6 @@ impl DefaultUpdateHandlerBuilder {
     }
 }
 
-impl DefaultCommandHandler {
-    /// Instantiate a new default command handler
-    pub fn new(logger: Logger) -> Self {
-        Self { logger }
-    }
-}
-
 impl UpdateHandler for DefaultUpdateHandler {
     fn message(&self, msg: telegram_bot_api::types::Message) -> UResult {
         info!(self.logger, "Received a message object!");
@@ -87,26 +74,10 @@ impl UpdateHandler for DefaultUpdateHandler {
     }
 }
 
-impl CommandHandler for DefaultCommandHandler {
-    fn forward_message(&self, _msg: Command) -> UResult {
-        todo!()
-    }
-}
-
 /// Default implementation of an update handler
 pub struct DefaultStreamHandler {
     dispatcher: Arc<dyn Dispatcher<Update>>,
     tls_config: ServerConfig,
-    logger: Logger,
-}
-
-/// Default implementation of a unix stream handler
-///
-/// The default implementation expects that the data
-/// being transmitted over the stream is done according
-/// to the qcproto protocol
-pub struct DefaultUnixStreamHandler {
-    dispatcher: Arc<dyn Dispatcher<Command>>,
     logger: Logger,
 }
 
@@ -172,35 +143,6 @@ impl DefaultStreamHandler {
     /// Instantiate a new default stream handler
     pub fn new() -> DefaultStreamHandlerBuilder {
         Default::default()
-    }
-}
-
-impl DefaultUnixStreamHandler {
-    /// Instantiate a new default unix stream handler
-    pub fn new(
-        dispatcher: Arc<dyn Dispatcher<Command>>,
-        logger: Logger,
-    ) -> DefaultUnixStreamHandler {
-        DefaultUnixStreamHandler { dispatcher, logger }
-    }
-}
-
-impl StreamHandler<UnixStream> for DefaultUnixStreamHandler {
-    fn handle_stream(&self, mut stream: UnixStream) -> UResult {
-        let response = serde_json::to_string(&TransmissionResult::Received)?;
-        let mut buffer = String::new();
-        stream.read_to_string(&mut buffer);
-        let command = serde_json::from_str::<Command>(&buffer);
-        if let Err(_) = command {
-            write!(
-                stream,
-                "{}",
-                serde_json::to_string(&TransmissionResult::BadSyntax)?
-            );
-        }
-        let command = command.unwrap();
-        write!(stream, "{}", response);
-        self.dispatcher.dispatch(command)
     }
 }
 

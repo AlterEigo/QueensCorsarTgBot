@@ -27,4 +27,4 @@ features = ["full"]
 [dependencies.qcproto]
 git = "https://github.com/AlterEigo/QCProto.git"
 branch = "master"
-version = "0.1.0"
+version = "0.2.0"
