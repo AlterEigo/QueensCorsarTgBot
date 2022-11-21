@@ -69,7 +69,7 @@ impl UpdateHandler for DefaultUpdateHandler {
                 content: msg.text.unwrap_or(Default::default())
             },
             sender_bot_family: BotFamily::Telegram,
-            protocol_version: 100
+            protocol_version: qcproto::types::PROTOCOL_VERSION
         };
 
         if let Some(ref sender) = self.discord_sender {
