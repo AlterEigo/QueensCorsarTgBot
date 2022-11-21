@@ -4,10 +4,23 @@ use std::iter;
 use rustls::version::TLS13;
 use rustls::{Certificate, ConfigBuilder, PrivateKey, ServerConfig, SupportedProtocolVersion};
 use rustls_pemfile::{read_one, Item};
-use telegram_bot_api::types::InputFile;
+use telegram_bot_api::types::{InputFile, User};
 
 use crate::config::Config;
 use crate::prelude::UResult;
+
+pub fn format_user_name(user: &User) -> String {
+    let flags = (
+        user.last_name.is_some(),
+        user.username.is_some()
+    );
+    match flags {
+        (true, true) => format!("{} {} ({})", user.first_name, user.last_name.clone().unwrap(), user.username.clone().unwrap()),
+        (true, false) => format!("{} {}", user.first_name, user.last_name.clone().unwrap()),
+        (false, true) => format!("{} ({})", user.first_name, user.username.clone().unwrap()),
+        (false, false) => format!("{}", user.first_name.clone())
+    }
+}
 
 pub fn load_input_file(file_path: &str) -> UResult<InputFile> {
     // let file = std::fs::File::open(std::path::Path::new(file_path))?;

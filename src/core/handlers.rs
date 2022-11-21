@@ -57,11 +57,16 @@ impl DefaultUpdateHandlerBuilder {
 impl UpdateHandler for DefaultUpdateHandler {
     fn message(&self, msg: telegram_bot_api::types::Message) -> UResult {
         info!(self.logger, "Received a message object!");
+        let author = if msg.from.is_none() {
+            "Unknown".to_owned()
+        } else {
+            format_user_name(&msg.from.as_ref().unwrap())
+        };
         let cmd = Command {
             kind: CommandKind::ForwardMessage {
-                from: ActorInfos { server: "tg_group_id".to_string(), sender: "AlterEigo".to_string() },
-                to: ActorInfos { server: "discord_group_id".to_string(), sender: "Anaxenomun".to_string() },
-                content: msg.text.unwrap_or(String::from(""))
+                from: ActorInfos { server: format!("{}", msg.chat.id), name: author },
+                to: ActorInfos { server: "1032941443058241546".to_string(), name: Default::default() },
+                content: msg.text.unwrap_or(Default::default())
             },
             sender_bot_family: BotFamily::Telegram,
             protocol_version: 100
