@@ -70,9 +70,13 @@ impl CommandHandler for AppCommandHandler {
     fn forward_message(&self, msg: Command) -> UResult {
         if let CommandKind::ForwardMessage { from, to: _, content } = msg.kind {
             let content = format!(
-                "**{}** пишет:\n{}", from.name, content
+                "*{}* пишет:\n{}", from.name, content
             );
-            let m = SendMessage::new(ChatId::IntType(-740350881 as i64), "test".to_owned());
+            let m = {
+                let mut m = SendMessage::new(ChatId::IntType(-740350881 as i64), content);
+                m.parse_mode = Some("MarkdownV2".to_owned());
+                m
+            };
 
             let tgbot = self.tgbot.clone();
             let logger = self.logger.clone();
