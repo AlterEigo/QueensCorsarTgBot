@@ -3,6 +3,7 @@ use rustls::{ServerConfig, ServerConnection};
 use slog::Logger;
 use telegram_bot_api::bot::BotApi;
 use telegram_bot_api::methods::SendMessage;
+use tokio::runtime::Runtime;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::os::unix::net::UnixStream;
@@ -41,6 +42,13 @@ impl AppCommandHandlerBuilder {
     pub fn logger(self, logger: Logger) -> Self {
         Self {
             logger: Some(logger),
+            ..self
+        }
+    }
+
+    pub fn runtime(self, runtime: Runtime) -> Self {
+        Self {
+            async_runtime: Some(runtime),
             ..self
         }
     }

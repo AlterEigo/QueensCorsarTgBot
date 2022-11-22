@@ -136,6 +136,7 @@ fn bootstrap_command_server(ctx: &BootstrapRequirements, tgbot: Arc<BotApi>) -> 
         AppCommandHandler::new()
             .logger(ctx.logger.clone())
             .bot(tgbot.clone())
+            .runtime(tokio::runtime::Runtime::new()?)
             .build()
     );
     let command_dispatcher = Arc::new(DefaultCommandDispatcher::new(
