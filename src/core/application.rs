@@ -5,6 +5,7 @@ use std::os::unix::net::UnixListener;
 use std::sync::Arc;
 use std::thread;
 use telegram_bot_api::bot;
+use telegram_bot_api::bot::BotApi;
 
 #[derive(Clone)]
 pub struct BootstrapRequirements {
@@ -125,13 +126,18 @@ fn bootstrap_update_server(ctx: &BootstrapRequirements) -> UResult {
     update_server.listen()
 }
 
-fn bootstrap_command_server(ctx: &BootstrapRequirements) -> UResult {
+fn bootstrap_command_server(ctx: &BootstrapRequirements, tgbot: Arc<BotApi>) -> UResult {
     let srv_addr = format!(
         "{}",
         ctx.config.general.sock_addr.to_string_lossy().into_owned()
     );
 
-    let command_handler = Arc::new(DefaultCommandHandler::new(ctx.logger.clone()));
+    let command_handler = Arc::new(
+        AppCommandHandler::new()
+            .logger(ctx.logger.clone())
+            .bot(tgbot.clone())
+            .build()
+    );
     let command_dispatcher = Arc::new(DefaultCommandDispatcher::new(
         command_handler,
         ctx.logger.clone(),
@@ -153,10 +159,10 @@ pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
 
     let bot_fut = instantiate_tgbot(&ctx);
 
-    {
-        let bot = bot_fut.await?;
-        show_webhook_infos(&ctx, &bot).await?;
-    }
+    let bot = bot_fut.await?;
+    show_webhook_infos(&ctx, &bot).await?;
+    let bot = Arc::new(bot);
+    
 
     thread::scope(|scope| -> UResult {
         scope.spawn(|| -> UResult {
@@ -173,7 +179,7 @@ pub async fn bootstrap(ctx: BootstrapRequirements) -> UResult {
         });
 
         scope.spawn(|| -> UResult {
-            if let Err(why) = bootstrap_command_server(&ctx) {
+            if let Err(why) = bootstrap_command_server(&ctx, bot.clone()) {
                 crit!(
                     ctx.logger,
                     "An error occured while running the command server: {:#?}",
