@@ -140,13 +140,6 @@ fn bootstrap_command_server(ctx: &BootstrapRequirements) -> UResult {
         command_dispatcher,
         ctx.logger.clone(),
     ));
-    // let stream_listener = Arc::new(
-    // StreamListener::<UnixListener>::new()
-    // .logger(ctx.logger.clone())
-    // .listener(UnixListener::bind(&srv_addr)?)
-    // .stream_handler(stream_handler)
-    // .build(),
-    // );
     let update_server = CommandServer::new()
         .logger(ctx.logger.clone())
         .server_addr(&srv_addr)

@@ -1,11 +1,55 @@
 use crate::prelude::*;
 use rustls::{ServerConfig, ServerConnection};
 use slog::Logger;
+use telegram_bot_api::bot::BotApi;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::os::unix::net::UnixStream;
 use std::sync::Arc;
 use telegram_bot_api::types::Update;
+
+#[derive(Debug)]
+pub struct AppCommandHandler {
+    logger: Logger,
+    tgbot: Arc<BotApi>
+}
+
+#[derive(Debug,Default)]
+pub struct AppCommandHandlerBuilder {
+    logger: Option<Logger>,
+    tgbot: Option<Arc<BotApi>>
+}
+
+impl AppCommandHandler {
+    pub fn new() -> AppCommandHandlerBuilder {
+        Default::default()
+    }
+}
+
+impl AppCommandHandlerBuilder {
+    pub fn bot(self, tgbot: Arc<BotApi>) -> Self {
+        Self {
+            tgbot: Some(tgbot),
+            ..self
+        }
+    }
+
+    pub fn logger(self, logger: Logger) -> Self {
+        Self {
+            logger: Some(logger),
+            ..self
+        }
+    }
+
+    pub fn build(self) -> AppCommandHandler {
+        assert!(self.logger.is_some(), "Did not provide a logger for the app command handler");
+        assert!(self.tgbot.is_some(), "Did not provide the telegram bot handle for the app command handler");
+        AppCommandHandler {
+            logger: self.logger.unwrap(),
+            tgbot: self.tgbot.unwrap()
+        }
+    }
+}
 
 /// Default implementation of an update handler
 #[derive(Debug)]
