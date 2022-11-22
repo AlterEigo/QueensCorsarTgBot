@@ -2,22 +2,26 @@ use crate::prelude::*;
 use rustls::{ServerConfig, ServerConnection};
 use slog::Logger;
 use telegram_bot_api::bot::BotApi;
+use telegram_bot_api::methods::SendMessage;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::os::unix::net::UnixStream;
 use std::sync::Arc;
-use telegram_bot_api::types::Update;
+use telegram_bot_api::types::{Update, ChatId};
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct AppCommandHandler {
     logger: Logger,
-    tgbot: Arc<BotApi>
+    tgbot: Arc<BotApi>,
+    async_runtime: tokio::runtime::Runtime
 }
 
 #[derive(Debug,Default)]
 pub struct AppCommandHandlerBuilder {
     logger: Option<Logger>,
-    tgbot: Option<Arc<BotApi>>
+    tgbot: Option<Arc<BotApi>>,
+    async_runtime: Option<tokio::runtime::Runtime>
 }
 
 impl AppCommandHandler {
@@ -44,9 +48,34 @@ impl AppCommandHandlerBuilder {
     pub fn build(self) -> AppCommandHandler {
         assert!(self.logger.is_some(), "Did not provide a logger for the app command handler");
         assert!(self.tgbot.is_some(), "Did not provide the telegram bot handle for the app command handler");
+        assert!(self.async_runtime.is_some(), "Did not provide an async runtime for the app command handler");
+
         AppCommandHandler {
             logger: self.logger.unwrap(),
-            tgbot: self.tgbot.unwrap()
+            tgbot: self.tgbot.unwrap(),
+            async_runtime: self.async_runtime.unwrap()
+        }
+    }
+}
+
+impl CommandHandler for AppCommandHandler {
+    fn forward_message(&self, msg: Command) -> UResult {
+        if let CommandKind::ForwardMessage { from, to: _, content } = msg.kind {
+            let content = format!(
+                "**{}** пишет:\n{}", from.name, content
+            );
+            let m = SendMessage::new(ChatId::IntType(-740350881 as i64), "test".to_owned());
+
+            let tgbot = self.tgbot.clone();
+            let logger = self.logger.clone();
+            self.async_runtime.block_on(self.async_runtime.spawn(async move {
+                if let Err(why) = tgbot.send_message(m).await {
+                    error!(logger, "Could not send a message; reason: {:#?}", why);
+                }
+            }));
+            Ok(())
+        } else {
+            Err("Wrong command kind received, expected ForwardMessage".into())
         }
     }
 }
