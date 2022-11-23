@@ -81,6 +81,10 @@ impl CommandHandler for AppCommandHandler {
             let tgbot = self.tgbot.clone();
             let logger = self.logger.clone();
             self.async_runtime.block_on(self.async_runtime.spawn(async move {
+                if let Ok(_) = tgbot.send_message(m.clone()).await {
+                    return;
+                }
+                let m = SendMessage { parse_mode: None, ..m };
                 if let Err(why) = tgbot.send_message(m).await {
                     error!(logger, "Could not send a message; reason: {:#?}", why);
                 }
