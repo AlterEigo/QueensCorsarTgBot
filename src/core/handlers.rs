@@ -8,7 +8,7 @@ use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::os::unix::net::UnixStream;
 use std::sync::Arc;
-use telegram_bot_api::types::{Update, ChatId};
+use telegram_bot_api::types::{Update, ChatId, MessageEntity};
 
 #[derive(Debug)]
 #[non_exhaustive]
@@ -69,22 +69,25 @@ impl AppCommandHandlerBuilder {
 impl CommandHandler for AppCommandHandler {
     fn forward_message(&self, msg: Command) -> UResult {
         if let CommandKind::ForwardMessage { from, to: _, content } = msg.kind {
+            let name_len = from.name.encode_utf16().count() as i64;
             let content = format!(
-                "*{}* пишет:\n{}", from.name, content
+                "{} пишет:\n{}", from.name, content
             );
             let m = {
                 let mut m = SendMessage::new(ChatId::IntType(-740350881 as i64), content);
-                m.parse_mode = Some("MarkdownV2".to_owned());
+                let entities = vec![
+                    MessageEntity::new_bold(0, name_len),
+                ];
+                m.entities = Some(entities);
                 m
             };
-
             let tgbot = self.tgbot.clone();
             let logger = self.logger.clone();
             self.async_runtime.block_on(self.async_runtime.spawn(async move {
-                if let Ok(_) = tgbot.send_message(m.clone()).await {
-                    return;
-                }
-                let m = SendMessage { parse_mode: None, ..m };
+                // if let Ok(_) = tgbot.send_message(m.clone()).await {
+                    // return;
+                // }
+                // let m = SendMessage { parse_mode: None, ..m };
                 if let Err(why) = tgbot.send_message(m).await {
                     error!(logger, "Could not send a message; reason: {:#?}", why);
                 }
