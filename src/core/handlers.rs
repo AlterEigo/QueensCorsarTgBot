@@ -74,7 +74,7 @@ impl CommandHandler for AppCommandHandler {
                 "{} пишет:\n{}", from.name, content
             );
             let m = {
-                let mut m = SendMessage::new(ChatId::IntType(-740350881 as i64), content);
+                let mut m = SendMessage::new(ChatId::IntType(-1001898024643 as i64), content);
                 let entities = vec![
                     MessageEntity::new_bold(0, name_len),
                 ];
